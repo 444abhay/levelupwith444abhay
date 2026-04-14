@@ -1,83 +1,116 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>S-RANK HUNTER SYSTEM 2.0</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S-RANK SYSTEM</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --neon: #00f2ff; --dark-bg: #050505; }
-        body { background: var(--dark-bg); color: white; text-align: center; font-family: 'Segoe UI', sans-serif; padding: 20px; }
-        .box { border: 2px solid var(--neon); padding: 30px; margin: 20px auto; max-width: 450px; box-shadow: 0 0 25px rgba(0, 242, 255, 0.4); border-radius: 15px; background: rgba(0, 0, 0, 0.9); }
-        h1 { font-size: 28px; text-transform: uppercase; letter-spacing: 5px; color: var(--neon); text-shadow: 0 0 10px var(--neon); }
-        input { padding: 15px; margin: 15px 0; width: 90%; background: transparent; border: 1px solid var(--neon); color: white; border-radius: 5px; outline: none; }
-        button { padding: 15px; width: 98%; background: var(--neon); color: black; border: none; font-weight: bold; cursor: pointer; text-transform: uppercase; border-radius: 5px; }
-        button:active { transform: scale(0.95); }
-        .leaderboard { margin-top: 40px; text-align: left; }
-        .hunter-row { background: rgba(255, 255, 255, 0.05); margin: 10px 0; padding: 15px; border-left: 4px solid var(--neon); display: flex; justify-content: space-between; border-radius: 4px; }
-        .rank-s { color: #ff0055; text-shadow: 0 0 10px #ff0055; font-weight: bold; }
-        .status-msg { color: #0f0; font-size: 13px; margin: 10px 0; height: 20px; }
+        :root { --blue: #00f2ff; --red: #ff0044; --bg: #0a0a0c; }
+        body { background: var(--bg); color: #fff; font-family: 'Orbitron', sans-serif; margin: 0; display: flex; flex-direction: column; align-items: center; }
+        
+        /* Initialization */
+        #boot-screen { position: fixed; inset: 0; background: #000; z-index: 999; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; }
+        
+        .main-container { width: 95%; max-width: 480px; padding: 20px; }
+        
+        /* Input Section */
+        .input-group { background: #16161e; padding: 25px; border-radius: 15px; border: 1px solid #333; margin-top: 20px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        input { width: 85%; padding: 15px; background: #000; border: 1px solid var(--blue); color: #fff; border-radius: 8px; margin-bottom: 20px; outline: none; font-size: 16px; }
+        
+        .btn-awaken { width: 100%; padding: 18px; background: var(--blue); color: #000; border: none; font-weight: 800; border-radius: 8px; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; }
+        .btn-awaken:hover { filter: brightness(1.2); box-shadow: 0 0 20px var(--blue); }
+
+        /* Hunter Cards with Anime Avatars */
+        .hunter-card { 
+            background: rgba(255, 255, 255, 0.03); 
+            margin: 15px 0; padding: 15px; border-radius: 12px; 
+            display: flex; align-items: center; gap: 15px;
+            border: 1px solid #222; transition: 0.3s;
+        }
+        .avatar { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--blue); background: #222; }
+        
+        .info { flex-grow: 1; }
+        .name { font-size: 18px; font-weight: bold; text-transform: uppercase; }
+        .rank-badge { font-size: 12px; padding: 2px 8px; border-radius: 4px; font-weight: bold; }
+        
+        /* Rank Styles */
+        .s-rank { border-color: var(--red); box-shadow: 0 0 15px rgba(255, 0, 68, 0.3); }
+        .s-rank .avatar { border-color: var(--red); }
+        .s-rank .rank-badge { background: var(--red); color: white; }
     </style>
 </head>
 <body>
 
-    <audio id="levelUpSound" src="https://www.soundjay.com/buttons/sounds/button-3.mp3"></audio>
+    <div id="boot-screen">
+        <h1 style="color: var(--blue); letter-spacing: 8px;">SYSTEM STATUS</h1>
+        <button class="btn-awaken" onclick="initSystem()" style="width: auto; padding: 20px 50px;">LOAD MANA CORE</button>
+    </div>
 
-    <div class="box">
-        <h1>SYSTEM INTERFACE</h1>
-        <p style="color: #666; font-size: 12px;">GATE STATUS: STABLE</p>
-        
-        <input type="text" id="username" placeholder="NAME OF THE HUNTER...">
-        <button onclick="register()">WAKE UP</button>
-        <div id="status" class="status-msg"></div>
+    <audio id="snd-level" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3"></audio>
 
-        <div class="leaderboard">
-            <h3 style="border-bottom: 1px solid #333; padding-bottom: 10px;">GUILD MEMBERS</h3>
-            <div id="hunter-list">Scanning...</div>
+    <div class="main-container">
+        <div class="input-group">
+            <h2 style="margin: 0 0 20px 0; color: var(--blue);">AWAKENING GATE</h2>
+            <input type="text" id="hName" placeholder="ENTER HUNTER NAME...">
+            <button class="btn-awaken" onclick="awaken()">REGISTER</button>
+            <p id="msg" style="font-size: 12px; color: #555; margin-top: 10px;"></p>
         </div>
+
+        <div id="list" style="margin-top: 30px;">
+            </div>
     </div>
 
     <script>
         const SUPABASE_URL = 'https://wtuqqbgdekhuwieznaxw.supabase.co'; 
         const SUPABASE_KEY = 'sb_publishable_-YVfJ-nKqdi6SLR2EY_-PA_C5LVa59-';
-        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        function getRank(level) {
-            if(level >= 90) return '<span class="rank-s">S-RANK</span>';
-            if(level >= 70) return '<span style="color:#ffaa00">A-RANK</span>';
-            return '<span style="color:#888">E-RANK</span>';
+        function initSystem() {
+            document.getElementById('boot-screen').style.display = 'none';
+            document.getElementById('snd-level').play().then(p => { 
+                document.getElementById('snd-level').pause(); 
+                document.getElementById('snd-level').currentTime = 0; 
+            });
         }
 
-        async function fetchHunters() {
-            const { data, error } = await supabaseClient.from('hunters').select('*').order('created_at', { ascending: false });
-            if (!error) {
-                const list = document.getElementById('hunter-list');
-                list.innerHTML = data.map(h => `
-                    <div class="hunter-row">
-                        <div>
-                            <div style="font-size: 10px; color: #444;">ID: ${h.id.slice(0,5)}</div>
-                            <div style="font-size: 18px;">${h.name.toUpperCase()}</div>
+        async function loadHunters() {
+            const { data } = await sb.from('hunters').select('*').order('created_at', { ascending: false });
+            const listDiv = document.getElementById('list');
+            if (data) {
+                listDiv.innerHTML = data.map(h => {
+                    const isS = h.level >= 90;
+                    // Naam ke basis par unique anime avatar generate karna
+                    const avatarUrl = `https://api.dicebear.com/7.x/adventurer/svg?seed=${h.name}`;
+                    
+                    return `
+                        <div class="hunter-card ${isS ? 's-rank' : ''}">
+                            <img src="${avatarUrl}" class="avatar" alt="pfp">
+                            <div class="info">
+                                <div class="name">${h.name}</div>
+                                <div style="color: #666; font-size: 12px;">LEVEL ${h.level}</div>
+                            </div>
+                            <div>
+                                <span class="rank-badge">${isS ? 'S-RANK' : 'E-RANK'}</span>
+                            </div>
                         </div>
-                        <div style="text-align: right;">
-                            ${getRank(h.level)}<br>
-                            <small>LVL ${h.level}</small>
-                        </div>
-                    </div>
-                `).join('');
+                    `;
+                }).join('');
             }
         }
 
-        async function register() {
-            const name = document.getElementById('username').value;
-            const statusBox = document.getElementById('status');
-            const audio = document.getElementById('levelUpSound');
-            
+        async function awaken() {
+            const name = document.getElementById('hName').value;
             if(!name) return;
+            const { error } = await sb.from('hunters').insert([{ name: name, level: 1 }]);
+            if (!error) {
+                document.getElementById('snd-level').play();
+                document.getElementById('hName').value = "";
+                loadHunters();
+            }
+        }
 
-            statusBox.innerText = "UPDATING SYSTEM RECORDS...";
-            const { error } = await supabaseClient.from('hunters').insert([{ name: name, level: 1 }]);
-
-            if (error) { statusBox.innerText = "ERROR: " + error.message; } 
-            else {
-                // Sound Play
+        loadHunters();
     </script>
 </body>
 </html>
