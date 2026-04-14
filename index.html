@@ -1,53 +1,82 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Hunter System</title>
+    <title>S-Rank Hunter System</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         body { background: #000; color: #00f; text-align: center; font-family: 'Courier New', monospace; padding: 20px; }
-        .box { border: 2px solid #00f; padding: 20px; margin: 20px auto; max-width: 400px; box-shadow: 0 0 15px #00f; border-radius: 10px; }
-        input { padding: 12px; margin: 10px; width: 85%; background: #111; color: #0f0; border: 1px solid #00f; outline: none; }
-        button { padding: 12px 20px; background: #00f; color: #fff; border: none; cursor: pointer; font-weight: bold; width: 90%; transition: 0.3s; }
-        button:hover { background: #0055ff; box-shadow: 0 0 10px #fff; }
-        #status { margin-top: 20px; color: #0f0; font-weight: bold; }
+        .box { border: 2px solid #00f; padding: 20px; margin: 20px auto; max-width: 450px; box-shadow: 0 0 20px #00f; border-radius: 10px; background: rgba(0,0,20,0.8); }
+        h1 { color: #fff; text-shadow: 0 0 10px #00f, 0 0 20px #00f; letter-spacing: 2px; }
+        input { padding: 12px; margin: 10px; width: 85%; background: #000; color: #0f0; border: 1px solid #00f; box-shadow: inset 0 0 5px #00f; outline: none; }
+        button { padding: 12px 20px; background: #00f; color: #fff; border: none; cursor: pointer; font-weight: bold; width: 90%; margin-top: 10px; text-transform: uppercase; }
+        button:hover { background: #fff; color: #00f; box-shadow: 0 0 15px #fff; }
+        
+        /* Leaderboard Style */
+        .leaderboard { margin-top: 30px; text-align: left; padding: 10px; border-top: 1px dashed #00f; }
+        .hunter-row { display: flex; justify-content: space-between; padding: 8px; border-bottom: 1px solid #002244; color: #0f0; font-size: 14px; }
+        .rank-tag { color: #ff00ff; font-weight: bold; }
     </style>
 </head>
 <body>
     <div class="box">
-        <h1 style="color: #fff; text-shadow: 0 0 10px #00f;">S-RANK HUNTER SYSTEM</h1>
-        <p>INITIALIZING REGISTRATION...</p>
+        <h1>HUNTER REGISTRY</h1>
+        <p style="color: #555;">SYSTEM STATUS: ONLINE</p>
+        
         <input type="text" id="username" placeholder="Enter Hunter Name...">
-        <br>
         <button onclick="register()">LEVEL UP</button>
-        <p id="status">System: Ready</p>
+        <p id="status" style="color: #0f0; font-size: 12px; margin-top: 10px;"></p>
+
+        <div class="leaderboard">
+            <h3 style="color: #fff; text-align: center;">ACTIVE HUNTERS</h3>
+            <div id="hunter-list">Loading database...</div>
+        </div>
     </div>
 
     <script>
-        // Aapki keys yahan set kar di hain
+        // Aapki details
         const SUPABASE_URL = 'https://wtuqqbgdekhuwieznaxw.supabase.co'; 
         const SUPABASE_KEY = 'sb_publishable_-YVfJ-nKqdi6SLR2EY_-PA_C5LVa59-';
-
         const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // Sabhi hunters ko dikhane ka function
+        async function fetchHunters() {
+            const { data, error } = await supabaseClient
+                .from('hunters')
+                .select('*')
+                .order('created_at', { ascending: false });
+
+            if (!error) {
+                const list = document.getElementById('hunter-list');
+                list.innerHTML = data.map(h => `
+                    <div class="hunter-row">
+                        <span><span class="rank-tag">[LVL ${h.level}]</span> ${h.name}</span>
+                        <span style="color: #444; font-size: 10px;">${new Date(h.created_at).toLocaleDateString()}</span>
+                    </div>
+                `).join('');
+            }
+        }
+
+        // Registration function
         async function register() {
             const name = document.getElementById('username').value;
             const statusBox = document.getElementById('status');
-            
-            if(!name) { statusBox.innerText = "WARNING: ENTER NAME!"; return; }
+            if(!name) return;
 
-            statusBox.innerText = "UPLOADING DATA TO SYSTEM...";
-
-            const { data, error } = await supabaseClient
-                .from('hunters')
-                .insert([{ name: name, level: 1 }]);
+            statusBox.innerText = "SYNCING WITH SYSTEM...";
+            const { error } = await supabaseClient.from('hunters').insert([{ name: name, level: 1 }]);
 
             if (error) {
-                statusBox.innerText = "SYSTEM ERROR: " + error.message;
+                statusBox.innerText = "FAIL: " + error.message;
             } else {
-                statusBox.innerText = "WELCOME, HUNTER " + name.toUpperCase() + "! LEVEL 1 ASSIGNED.";
+                statusBox.innerText = "SUCCESSFULLY REGISTERED!";
                 document.getElementById('username').value = "";
+                fetchHunters(); // List refresh karo
             }
         }
+
+        // Page load hote hi list dikhao
+        fetchHunters();
     </script>
 </body>
 </html>
+
