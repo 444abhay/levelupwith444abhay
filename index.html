@@ -1,7 +1,53 @@
 <!DOCTYPE html>
 <html>
-<body style="background: black; color: cyan; text-align: center; font-family: sans-serif;">
-    <h1>LEVEL UP WITH 444 ABHAY</h1>
-    <p>System is Live. Hunter registration starting soon...</p>
+<head>
+    <title>Hunter System</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body { background: #000; color: #00f; text-align: center; font-family: 'Courier New', monospace; padding: 20px; }
+        .box { border: 2px solid #00f; padding: 20px; margin: 20px auto; max-width: 400px; box-shadow: 0 0 15px #00f; border-radius: 10px; }
+        input { padding: 12px; margin: 10px; width: 85%; background: #111; color: #0f0; border: 1px solid #00f; outline: none; }
+        button { padding: 12px 20px; background: #00f; color: #fff; border: none; cursor: pointer; font-weight: bold; width: 90%; transition: 0.3s; }
+        button:hover { background: #0055ff; box-shadow: 0 0 10px #fff; }
+        #status { margin-top: 20px; color: #0f0; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1 style="color: #fff; text-shadow: 0 0 10px #00f;">S-RANK HUNTER SYSTEM</h1>
+        <p>INITIALIZING REGISTRATION...</p>
+        <input type="text" id="username" placeholder="Enter Hunter Name...">
+        <br>
+        <button onclick="register()">LEVEL UP</button>
+        <p id="status">System: Ready</p>
+    </div>
+
+    <script>
+        // Aapki keys yahan set kar di hain
+        const SUPABASE_URL = 'https://wtuqqbgdekhuwieznaxw.supabase.co'; 
+        const SUPABASE_KEY = 'sb_publishable_-YVfJ-nKqdi6SLR2EY_-PA_C5LVa59-';
+
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function register() {
+            const name = document.getElementById('username').value;
+            const statusBox = document.getElementById('status');
+            
+            if(!name) { statusBox.innerText = "WARNING: ENTER NAME!"; return; }
+
+            statusBox.innerText = "UPLOADING DATA TO SYSTEM...";
+
+            const { data, error } = await supabaseClient
+                .from('hunters')
+                .insert([{ name: name, level: 1 }]);
+
+            if (error) {
+                statusBox.innerText = "SYSTEM ERROR: " + error.message;
+            } else {
+                statusBox.innerText = "WELCOME, HUNTER " + name.toUpperCase() + "! LEVEL 1 ASSIGNED.";
+                document.getElementById('username').value = "";
+            }
+        }
+    </script>
 </body>
 </html>
