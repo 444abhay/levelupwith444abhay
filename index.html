@@ -3,39 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S-RANK HUNTER SYSTEM (OTP)</title>
+    <title>S-RANK SYSTEM: PRIVATE ACCESS</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --neon: #00f2ff; --dark: #050505; }
-        body { background: var(--dark); color: white; font-family: sans-serif; text-align: center; padding: 20px; }
-        .box { background: #111; padding: 25px; border-radius: 15px; border: 1px solid #333; max-width: 380px; margin: auto; }
-        input { width: 90%; padding: 12px; margin: 8px 0; background: #000; border: 1px solid #444; color: white; border-radius: 8px; }
-        .btn { width: 95%; padding: 14px; background: var(--neon); border: none; font-weight: bold; cursor: pointer; border-radius: 8px; margin-top: 10px; }
+        :root { --neon: #00f2ff; --dark: #050505; --card: #11111d; }
+        body { background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; margin: 0; }
+        .box { background: #111; padding: 25px; border-radius: 15px; border: 1px solid #333; max-width: 380px; margin: 20px auto; box-shadow: 0 0 20px rgba(0,242,255,0.1); }
+        input { width: 90%; padding: 12px; margin: 10px 0; background: #000; border: 1px solid #444; color: white; border-radius: 8px; outline: none; transition: 0.3s; }
+        input:focus { border-color: var(--neon); box-shadow: 0 0 10px var(--neon); }
+        .btn { width: 95%; padding: 14px; background: var(--neon); border: none; font-weight: bold; cursor: pointer; border-radius: 8px; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px; }
         .hidden { display: none; }
+        .card { background: var(--card); border: 2px solid var(--neon); padding: 20px; border-radius: 20px; max-width: 380px; margin: 20px auto; position: relative; overflow: hidden; }
+        .stat-btn { width: 100%; padding: 12px; background: transparent; border: 1px solid var(--neon); color: var(--neon); border-radius: 10px; cursor: pointer; margin-top: 10px; font-weight: bold; }
+        .stat-btn:active { background: var(--neon); color: black; }
+        .logout-btn { background: #ff4444; color: white; width: 150px; margin-top: 30px; }
     </style>
 </head>
 <body>
 
-    <div id="auth-box" class="box">
-        <h2 style="color:var(--neon)">SYSTEM ACCESS</h2>
-        <input type="email" id="email" placeholder="Hunter Email Address">
-        <button class="btn" onclick="sendOTP()">SEND OTP</button>
-        <div id="otp-input" class="hidden">
-            <input type="number" id="otp" placeholder="Enter 6-Digit OTP">
-            <button class="btn" onclick="verifyOTP()">VERIFY & LOGIN</button>
+    <h1 style="color: var(--neon); text-shadow: 0 0 10px var(--neon);">S-RANK SYSTEM</h1>
+
+    <div id="auth-section" class="box">
+        <h2 id="auth-title">SYSTEM LOGIN</h2>
+        <input type="email" id="email" placeholder="Enter Hunter Email">
+        <button class="btn" id="send-btn" onclick="sendOTP()">Send Access Code</button>
+        
+        <div id="otp-input-area" class="hidden">
+            <p style="color: #aaa; font-size: 14px;">Check your email for OTP or Login Link</p>
+            <input type="number" id="otp-code" placeholder="Enter 6-Digit OTP">
+            <button class="btn" onclick="verifyOTP()">Verify & Awaken</button>
         </div>
     </div>
 
-    <div id="reg-box" class="box hidden">
-        <h2 style="color:var(--neon)">HUNTER REGISTRATION</h2>
-        <input type="text" id="h-name" placeholder="Full Name">
-        <input type="file" id="h-pic" accept="image/*">
-        <button class="btn" onclick="createProfile()">AWAKEN PROFILE</button>
+    <div id="reg-section" class="box hidden">
+        <h2 style="color: var(--neon);">NEW HUNTER DETECTED</h2>
+        <p>Register your DNA to the system</p>
+        <input type="text" id="hunter-name" placeholder="Full Name">
+        <p style="text-align:left; font-size:12px; margin-left:20px;">Profile Picture:</p>
+        <input type="file" id="hunter-pic" accept="image/*">
+        <button class="btn" onclick="registerHunter()">Initialize Awakening</button>
     </div>
 
     <div id="dashboard" class="hidden">
-        <div id="profile-content"></div>
-        <button class="btn" style="background:#ff4444; color:white; width:150px" onclick="logout()">LOGOUT</button>
+        <div id="profile-card"></div>
+        <button class="btn logout-btn" onclick="logout()">Logout</button>
     </div>
 
     <script>
@@ -43,54 +54,57 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0dXFxYmdkZWtodXdpZXpuYXh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxODI5MzgsImV4cCI6MjA5MTc1ODkzOH0.reg4QhMeaEerMVsIFNebgQ7pn2U3RtvDSS59NGrVRrY';
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        // --- AUTH FUNCTIONS ---
         async function sendOTP() {
             const email = document.getElementById('email').value;
+            if(!email) return alert("Email is required!");
+            
             const { error } = await sb.auth.signInWithOtp({ email });
-            if(error) alert(error.message);
-            else { alert("OTP Sent!"); document.getElementById('otp-input').classList.remove('hidden'); }
+            if(error) alert("Error: " + error.message);
+            else {
+                alert("OTP/Link Sent! Check your inbox.");
+                document.getElementById('otp-input-area').classList.remove('hidden');
+                document.getElementById('send-btn').innerText = "Resend Code";
+            }
         }
 
         async function verifyOTP() {
             const email = document.getElementById('email').value;
-            const token = document.getElementById('otp').value;
+            const token = document.getElementById('otp-code').value;
             const { error } = await sb.auth.verifyOtp({ email, token, type: 'email' });
-            if(error) alert("Invalid OTP"); else checkUser();
-        }
-
-        async function checkUser() {
-            const { data: { user } } = await sb.auth.getUser();
-            if(user) {
-                document.getElementById('auth-box').classList.add('hidden');
-                const { data } = await sb.from('hunters').select('*').eq('user_id', user.id).maybeSingle();
-                if(data) {
-                    document.getElementById('dashboard').classList.remove('hidden');
-                    renderProfile(data);
-                } else {
-                    document.getElementById('reg-box').classList.remove('hidden');
-                }
-            }
-        }
-
-        async function createProfile() {
-            const { data: { user } } = await sb.auth.getUser();
-            const name = document.getElementById('h-name').value;
-            const f = document.getElementById('h-pic').files[0];
-            const reader = new FileReader();
-            reader.readAsDataURL(f);
-            reader.onload = async () => {
-                const { error } = await sb.from('hunters').insert([{
-                    name, user_id: user.id, image_url: reader.result, level: 1, pushups: 0, situps: 0, squats: 0
-                }]);
-                if(!error) checkUser(); else alert(error.message);
-            };
-        }
-
-        function renderProfile(h) {
-            document.getElementById('profile-content').innerHTML = `<h3>${h.name}</h3><p>LEVEL ${h.level}</p>`;
+            if(error) alert("Invalid Code!"); else checkStatus();
         }
 
         async function logout() { await sb.auth.signOut(); location.reload(); }
-        checkUser();
-    </script>
-</body>
-</html>
+
+        // --- PROFILE LOGIC ---
+        async function checkStatus() {
+            const { data: { user } } = await sb.auth.getUser();
+            if(!user) return;
+
+            document.getElementById('auth-section').classList.add('hidden');
+            
+            // Check if user already has a hunter profile
+            const { data, error } = await sb.from('hunters').select('*').eq('user_id', user.id).maybeSingle();
+            
+            if(data) {
+                document.getElementById('dashboard').classList.remove('hidden');
+                document.getElementById('reg-section').classList.add('hidden');
+                renderHunter(data);
+            } else {
+                document.getElementById('reg-section').classList.remove('hidden');
+            }
+        }
+
+        async function registerHunter() {
+            const { data: { user } } = await sb.auth.getUser();
+            const name = document.getElementById('hunter-name').value;
+            const file = document.getElementById('hunter-pic').files[0];
+
+            if(!name || !file) return alert("All fields are mandatory!");
+
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = async () => {
+                const { error } = await sb.from('hunters').insert([{
+                    name: name,
