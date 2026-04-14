@@ -3,39 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S-RANK HUNTER SYSTEM v6.0</title>
+    <title>S-RANK HUNTER SYSTEM</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --neon: #00f2ff; --s-rank: #ff0044; --dark-bg: #050505; --card-bg: #11111d; }
-        body { background: var(--dark-bg); color: white; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 15px; margin: 0; }
-        .main-box { background: #111; padding: 25px; border-radius: 20px; border: 1px solid #333; max-width: 400px; margin: 10px auto; }
-        input { width: 90%; padding: 12px; margin: 8px 0; background: #000; border: 1px solid #333; color: white; border-radius: 8px; }
-        .awaken-btn { width: 95%; padding: 15px; background: var(--neon); border: none; font-weight: 900; border-radius: 8px; cursor: pointer; text-transform: uppercase; color: #000; }
-        .card { background: var(--card-bg); margin: 20px auto; padding: 18px; border-radius: 18px; text-align: left; border: 1px solid #222; max-width: 400px; }
-        .user-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
-        .user-img { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--neon); object-fit: cover; }
-        .quest-sec { background: rgba(0,0,0,0.3); padding: 10px; border-radius: 12px; }
-        .q-row { margin-bottom: 15px; }
-        .bar-bg { background: #222; height: 10px; border-radius: 5px; overflow: hidden; margin: 5px 0; }
-        .bar-fill { height: 100%; transition: 0.5s; }
-        .record-btn { width: 100%; background: #222; border: 1px solid var(--neon); color: var(--neon); padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 5px; }
-        .record-btn:active { background: var(--neon); color: #000; }
+        :root { --neon: #00f2ff; --dark: #050505; }
+        body { background: var(--dark); color: white; font-family: sans-serif; text-align: center; margin: 0; padding: 15px; }
+        .box { background: #111; padding: 20px; border-radius: 15px; border: 1px solid #333; max-width: 380px; margin: auto; }
+        input { width: 90%; padding: 10px; margin: 5px 0; background: #000; border: 1px solid #444; color: white; border-radius: 5px; }
+        .btn { width: 95%; padding: 12px; background: var(--neon); border: none; font-weight: bold; cursor: pointer; border-radius: 5px; margin-top: 10px; }
+        .card { background: #11111d; border: 1px solid #222; padding: 15px; border-radius: 15px; max-width: 380px; margin: 20px auto; text-align: left; }
+        .bar-bg { background: #222; height: 10px; border-radius: 5px; margin: 8px 0; overflow: hidden; }
+        .bar-fill { height: 100%; background: var(--neon); transition: 0.4s; box-shadow: 0 0 10px var(--neon); }
+        .rec-btn { width: 100%; padding: 8px; background: transparent; border: 1px solid var(--neon); color: var(--neon); cursor: pointer; border-radius: 5px; font-size: 11px; font-weight: bold; margin-bottom: 15px; }
+        .rec-btn:active { background: var(--neon); color: black; }
     </style>
 </head>
 <body>
 
-    <div class="main-box">
-        <h2>System Interface</h2>
-        <input type="text" id="name" placeholder="Hunter Name">
-        <input type="number" id="phone" placeholder="Phone Number">
-        <input type="file" id="pic" accept="image/*" style="margin: 10px 0;">
-        <button class="awaken-btn" onclick="reg()">Begin Awakening</button>
+    <div class="box">
+        <h3 style="color:var(--neon)">SYSTEM INTERFACE</h3>
+        <input type="text" id="name" placeholder="HUNTER NAME">
+        <input type="number" id="phone" placeholder="PHONE NUMBER">
+        <input type="file" id="pic" accept="image/*">
+        <button class="btn" onclick="reg()">AWAKEN</button>
     </div>
 
     <div id="list"></div>
 
     <script>
-        const SUPABASE_URL = 'https://wtuqqbgdekhuwieznaxw.supabase.co'; 
+        const SUPABASE_URL = 'https://wtuqqbgdekhuwieznaxw.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0dXFxYmdkZWtodXdpZXpuYXh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxODI5MzgsImV4cCI6MjA5MTc1ODkzOH0.reg4QhMeaEerMVsIFNebgQ7pn2U3RtvDSS59NGrVRrY';
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -43,47 +39,39 @@
             const n = document.getElementById('name').value;
             const p = document.getElementById('phone').value;
             const f = document.getElementById('pic').files[0];
-            if(!n || !f) return alert("Fill all fields!");
+            if(!n || !f) return alert("Details missing!");
 
             const reader = new FileReader();
             reader.readAsDataURL(f);
             reader.onload = async () => {
                 const { error } = await sb.from('hunters').insert([{ 
-                    name: n, phone: p, level: 1, image_url: reader.result,
-                    pushups: 0, situps: 0, squats: 0 
+                    name: n, phone: p, image_url: reader.result, level: 1, pushups: 0, situps: 0, squats: 0 
                 }]);
-                if(!error) location.reload(); else alert("Error at Gate!");
+                if(!error) location.reload(); else alert("Gate connection failed. Check column names!");
             };
         }
 
-        async function updateQuest(id, type, current) {
-            const newVal = current + 10;
-            const { error } = await sb.from('hunters').update({ [type]: newVal }).eq('id', id);
-            if(!error) load(); else alert("Update failed!");
+        async function update(id, type, val) {
+            const { error } = await sb.from('hunters').update({ [type]: val + 10 }).eq('id', id);
+            if(!error) load(); else alert("Update failed! Check if column type is int8");
         }
 
         async function load() {
             const { data } = await sb.from('hunters').select('*').order('created_at', { ascending: false });
             if(data) {
                 document.getElementById('list').innerHTML = data.map(h => `
-                <div class="card">
-                    <div class="user-header">
-                        <img src="${h.image_url}" class="user-img">
-                        <div>
-                            <b>${h.name}</b><br>
-                            <small style="color:var(--neon)">LEVEL ${h.level}</small>
+                    <div class="card">
+                        <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                            <img src="${h.image_url}" style="width:50px; height:50px; border-radius:50%; border:1px solid var(--neon)">
+                            <b>${h.name} <br><small style="color:var(--neon)">LEVEL ${h.level}</small></b>
                         </div>
-                    </div>
-                    <div class="quest-sec">
                         ${['pushups', 'situps', 'squats'].map(q => `
-                            <div class="q-row">
-                                <small>${q.toUpperCase()}: ${h[q] || 0}/100</small>
-                                <div class="bar-bg"><div class="bar-fill" style="width:${h[q]}%; background:var(--neon)"></div></div>
-                                <button class="record-btn" onclick="updateQuest('${h.id}', '${q}', ${h[q] || 0})">+ RECORD 10 REPS</button>
-                            </div>
+                            <div style="font-size:11px; letter-spacing:1px;">${q.toUpperCase()}: ${h[q]||0}/100</div>
+                            <div class="bar-bg"><div class="bar-fill" style="width:${h[q]||0}%"></div></div>
+                            <button class="rec-btn" onclick="update('${h.id}', '${q}', ${h[q]||0})">+ RECORD 10 REPS</button>
                         `).join('')}
                     </div>
-                </div>`).join('');
+                `).join('');
             }
         }
         load();
