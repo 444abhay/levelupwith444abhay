@@ -8,40 +8,22 @@
     <style>
         :root { --neon: #00f2ff; --s-rank: #ff0044; --dark-bg: #050505; --card-bg: #11111d; }
         body { background: var(--dark-bg); color: white; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 15px; margin: 0; }
-        
         .main-box { background: #111; padding: 25px; border-radius: 20px; border: 1px solid #333; max-width: 400px; margin: 10px auto; box-shadow: 0 0 30px rgba(0,242,255,0.1); }
         h2 { color: var(--neon); letter-spacing: 2px; font-size: 22px; margin-bottom: 20px; text-transform: uppercase; }
-        
-        input { width: 90%; padding: 12px; margin: 8px 0; background: #000; border: 1px solid #333; color: white; border-radius: 8px; font-size: 14px; outline: none; transition: 0.3s; }
-        input:focus { border-color: var(--neon); box-shadow: 0 0 10px rgba(0,242,255,0.2); }
-        
+        input { width: 90%; padding: 12px; margin: 8px 0; background: #000; border: 1px solid #333; color: white; border-radius: 8px; font-size: 14px; outline: none; }
+        input:focus { border-color: var(--neon); }
         .file-btn { display: inline-block; padding: 12px; border: 1px dashed #444; margin: 10px 0; cursor: pointer; width: 90%; font-size: 13px; color: #888; border-radius: 8px; }
-        .awaken-btn { width: 95%; padding: 15px; background: var(--neon); border: none; font-weight: 900; border-radius: 8px; cursor: pointer; text-transform: uppercase; color: #000; margin-top: 10px; }
-        
-        /* Card UI */
-        .card { 
-            background: var(--card-bg); margin-top: 20px; padding: 18px; border-radius: 18px; 
-            text-align: left; border: 1px solid #222; position: relative; overflow: hidden;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-        }
+        .awaken-btn { width: 95%; padding: 15px; background: var(--neon); border: none; font-weight: 900; border-radius: 8px; cursor: pointer; text-transform: uppercase; color: #000; }
+        .card { background: var(--card-bg); margin-top: 20px; padding: 18px; border-radius: 18px; text-align: left; border: 1px solid #222; position: relative; }
         .user-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
         .user-img { width: 70px; height: 70px; border-radius: 50%; border: 2px solid var(--neon); object-fit: cover; }
-        
-        /* Workout Section */
         .quest-sec { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 12px; border: 1px solid #222; }
         .q-row { margin-bottom: 18px; }
-        .q-info { display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; margin-bottom: 6px; letter-spacing: 1px; }
+        .q-info { display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; margin-bottom: 6px; }
         .bar-bg { background: #222; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 8px; }
-        .bar-fill { height: 100%; border-radius: 4px; transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        
-        .record-btn { 
-            width: 100%; background: transparent; border: 1px solid var(--neon); color: var(--neon); 
-            border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; padding: 8px;
-            text-transform: uppercase; transition: 0.3s;
-        }
-        .record-btn:active { background: var(--neon); color: black; }
-
-        .diet-tag { font-size: 11px; border-left: 3px solid var(--neon); padding-left: 10px; margin-top: 12px; color: #888; line-height: 1.4; }
+        .bar-fill { height: 100%; border-radius: 4px; transition: 0.6s; }
+        .record-btn { width: 100%; background: transparent; border: 1px solid var(--neon); color: var(--neon); border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; padding: 8px; text-transform: uppercase; }
+        .diet-tag { font-size: 11px; border-left: 3px solid var(--neon); padding-left: 10px; margin-top: 12px; color: #888; }
     </style>
 </head>
 <body>
@@ -49,7 +31,7 @@
     <div class="main-box">
         <h2>System Interface</h2>
         <input type="text" id="name" placeholder="Enter Hunter Name">
-        <input type="number" id="phone" placeholder="Enter Phone Number (For Guild Notice)">
+        <input type="number" id="phone" placeholder="Enter Phone Number">
         <label class="file-btn">
             <input type="file" id="pic" accept="image/*" style="display:none" onchange="document.getElementById('st').innerText='Image Captured ✅'">
             <span id="st">Upload Hunter Profile Photo</span>
@@ -60,8 +42,9 @@
     <div id="list" style="max-width:420px; margin:auto; padding-bottom: 50px;"></div>
 
     <script>
+        // Supabase Configuration
         const SUPABASE_URL = 'https://wtuqqbgdekhuwieznaxw.supabase.co'; 
-        const SUPABASE_KEY = 'sb_publishable_-YVfJ-nKqdi6SLR2EY_-PA_C5LVa59-';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0dXFxYmdkZWtodXdpZXpuYXh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxODI5MzgsImV4cCI6MjA5MTc1ODkzOH0.reg4QhMeaEerMVsIFNebgQ7pn2U3RtvDSS59NGrVRrY';
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         async function reg() {
@@ -79,10 +62,11 @@
                     pushups: 0, situps: 0, squats: 0 
                 }]);
                 if(!error) {
-                    alert(`[NOTICE]: Hunter ${n} has joined the Guild. Prepare for your first Quest.`);
+                    alert(`[NOTICE]: Hunter ${n} has joined the Guild.`);
                     location.reload();
                 } else {
-                    alert("Gate connection failed. Try again.");
+                    alert("Gate connection failed. Check Database Column Names!");
+                    console.error(error);
                 }
             };
         }
@@ -94,7 +78,7 @@
             if(!error) {
                 const { data: h } = await sb.from('hunters').select('*').eq('id', id).single();
                 if(h.pushups >= 100 && h.situps >= 100 && h.squats >= 100) {
-                    alert(`[LEVEL UP]: Congratulations ${name}! You have completed the Daily Quest. Your strength is growing.\nNew Level: ${level + 1}`);
+                    alert(`[LEVEL UP]: Hunter ${name}, Level: ${level + 1}`);
                     await sb.from('hunters').update({ level: level + 1, pushups: 0, situps: 0, squats: 0 }).eq('id', id);
                 }
                 load();
@@ -106,6 +90,33 @@
             if(data) {
                 document.getElementById('list').innerHTML = data.map(h => {
                     const isSRank = h.level >= 10;
+                    const themeColor = isSRank ? 'var(--s-rank)' : 'var(--neon)';
+                    return `
+                    <div class="card" style="border-color: ${isSRank ? '#ff0044' : '#222'}">
+                        <div class="user-header">
+                            <img src="${h.image_url}" class="user-img" style="border-color: ${themeColor}">
+                            <div>
+                                <div style="font-weight:bold; font-size:19px; text-transform:uppercase;">${h.name}</div>
+                                <div style="color:${themeColor}; font-size:12px; font-weight:bold;">LEVEL ${h.level}</div>
+                            </div>
+                        </div>
+                        <div class="quest-sec">
+                            ${['pushups', 'situps', 'squats'].map(q => `
+                                <div class="q-row">
+                                    <div class="q-info"><span>${q.toUpperCase()}</span><span style="color:${themeColor}">${h[q] || 0}/100</span></div>
+                                    <div class="bar-bg"><div class="bar-fill" style="width:${(h[q] || 0)}%; background:${themeColor}; box-shadow: 0 0 10px ${themeColor}66;"></div></div>
+                                    <button class="record-btn" style="border-color:${themeColor}; color:${themeColor}" onclick="updateQuest('${h.id}', '${q}', ${h[q]||0}, '${h.name}', ${h.level})">+ Record 10 Reps</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+        }
+        load();
+    </script>
+</body>
+</html>
                     const themeColor = isSRank ? 'var(--s-rank)' : 'var(--neon)';
                     
                     return `
