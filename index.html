@@ -1,74 +1,96 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>S-RANK HUNTER ID</title>
+    <title>S-RANK FITNESS SYSTEM</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --neon: #00f2ff; --s-rank: #ff0044; }
-        body { background: #050505; color: white; font-family: sans-serif; text-align: center; padding: 20px; }
-        .main-box { background: #111; padding: 25px; border-radius: 20px; border: 1px solid #333; max-width: 400px; margin: auto; }
-        input { width: 80%; padding: 12px; margin: 10px 0; background: #000; border: 1px solid var(--neon); color: white; border-radius: 8px; }
-        .file-btn { display: inline-block; padding: 10px; border: 1px dashed var(--neon); margin: 10px 0; cursor: pointer; width: 80%; }
-        button { width: 85%; padding: 15px; background: var(--neon); border: none; font-weight: bold; border-radius: 8px; cursor: pointer; }
+        :root { --neon: #00f2ff; --s-rank: #ff0044; --gold: #ffd700; }
+        body { background: #050505; color: white; font-family: 'Orbitron', sans-serif; padding: 15px; }
+        .main-box { background: #111; padding: 20px; border-radius: 15px; border: 1px solid #333; max-width: 450px; margin: auto; }
         
-        /* Card Style */
-        .card { 
-            background: #1a1a2e; margin-top: 20px; padding: 15px; border-radius: 15px; 
-            display: flex; align-items: center; gap: 15px; text-align: left; border: 1px solid #222;
-            position: relative; overflow: hidden;
-        }
-        .user-img { width: 70px; height: 70px; border-radius: 50%; border: 2px solid var(--neon); object-fit: cover; z-index: 2; }
+        /* Progress Bar Style */
+        .quest-item { margin: 10px 0; text-align: left; }
+        .bar-bg { background: #222; height: 10px; border-radius: 5px; margin-top: 5px; overflow: hidden; }
+        .bar-fill { background: var(--neon); height: 100%; transition: 0.5s; box-shadow: 0 0 10px var(--neon); }
         
-        /* Anime Background Aura */
-        .card::after {
-            content: "HUNTER"; position: absolute; right: -10px; bottom: -5px;
-            font-size: 40px; font-weight: 900; color: rgba(255,255,255,0.05); z-index: 1;
-        }
+        .diet-box { background: rgba(0, 242, 255, 0.05); border: 1px dashed var(--neon); padding: 10px; border-radius: 10px; font-size: 12px; margin-top: 15px; }
+        
+        .card { background: #1a1a2e; margin-top: 20px; padding: 15px; border-radius: 15px; border: 1px solid #222; display: flex; flex-direction: column; gap: 10px; position: relative; }
+        .user-info { display: flex; align-items: center; gap: 15px; }
+        .user-img { width: 60px; height: 60px; border-radius: 50%; border: 2px solid var(--neon); object-fit: cover; }
+        
+        .btn-plus { background: var(--neon); border: none; color: black; border-radius: 3px; cursor: pointer; padding: 2px 8px; font-weight: bold; }
     </style>
 </head>
 <body>
+
     <div class="main-box">
-        <h2 style="color: var(--neon);">SYSTEM INTERFACE</h2>
-        <input type="text" id="name" placeholder="ENTER NAME">
-        <label class="file-btn">
-            <input type="file" id="pic" accept="image/*" style="display:none" onchange="document.getElementById('st').innerText='Photo Selected!'">
-            <span id="st">CLICK TO SELECT PHOTO</span>
-        </label>
-        <button onclick="reg()">AWAKEN</button>
+        <h2 style="color: var(--neon); text-align: center;">DAILY QUEST BOARD</h2>
+        <input type="text" id="hName" placeholder="HUNTER NAME..." style="width:80%; padding:10px; background:#000; color:white; border:1px solid var(--neon); border-radius:5px;">
+        <input type="file" id="hPic" accept="image/*" style="margin: 10px 0;">
+        <button onclick="awaken()" style="width:100%; padding:12px; background:var(--neon); border:none; border-radius:5px; font-weight:bold; cursor:pointer;">START JOURNEY</button>
     </div>
-    <div id="list" style="max-width:400px; margin:auto;"></div>
+
+    <div id="hunterList" style="max-width: 450px; margin: auto;"></div>
 
     <script>
         const SUPABASE_URL = 'https://wtuqqbgdekhuwieznaxw.supabase.co'; 
-        const SUPABASE_KEY = 'sb_publishable_-YVfJ-nKqdi6SLR2EY_-PA_C5LVa59-';
+        const SUPABASE_KEY = 'YOUR_KEY_HERE';
         const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        async function reg() {
-            const n = document.getElementById('name').value;
-            const f = document.getElementById('pic').files[0];
-            if(!n || !f) return alert("Photo aur Name dono dalo!");
+        async function awaken() {
+            const n = document.getElementById('hName').value;
+            const f = document.getElementById('hPic').files[0];
+            if(!n || !f) return alert("Photo & Name Required!");
 
             const reader = new FileReader();
             reader.readAsDataURL(f);
             reader.onload = async () => {
-                const { error } = await sb.from('hunters').insert([{ name: n, level: 1, image_url: reader.result }]);
+                const { error } = await sb.from('hunters').insert([{ 
+                    name: n, 
+                    level: 1, 
+                    image_url: reader.result,
+                    pushups: 0, situps: 0, squats: 0, running: 0 
+                }]);
                 if(!error) location.reload();
             };
         }
 
+        async function updateQuest(id, type, current) {
+            const newVal = current + 10; // Har click par 10 Reps badhenge
+            await sb.from('hunters').update({ [type]: newVal }).eq('id', id);
+            load();
+        }
+
         async function load() {
             const { data } = await sb.from('hunters').select('*').order('created_at', { ascending: false });
-            if(data) {
-                document.getElementById('list').innerHTML = data.map(h => `
-                    <div class="card">
+            const list = document.getElementById('hunterList');
+            list.innerHTML = data.map(h => `
+                <div class="card">
+                    <div class="user-info">
                         <img src="${h.image_url}" class="user-img">
                         <div>
                             <div style="font-weight:bold; font-size:18px;">${h.name}</div>
-                            <div style="color:var(--neon); font-size:12px;">LEVEL ${h.level}</div>
+                            <div style="color:var(--neon); font-size:12px;">RANK: ${h.level >= 90 ? 'S' : 'E'} (LVL ${h.level})</div>
                         </div>
                     </div>
-                `).join('');
-            }
+
+                    <div style="background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px;">
+                        <div style="font-size: 10px; color: var(--neon); margin-bottom: 5px;">ACTIVE QUESTS</div>
+                        ${['pushups', 'situps', 'squats'].map(q => `
+                            <div class="quest-item">
+                                <span style="font-size:12px;">${q.toUpperCase()}: ${h[q] || 0}/100</span>
+                                <button class="btn-plus" onclick="updateQuest('${h.id}', '${q}', ${h[q] || 0})">+</button>
+                                <div class="bar-bg"><div class="bar-fill" style="width: ${(h[q] || 0)}%"></div></div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="diet-box">
+                        <b>MANA DIET:</b> ${h.level >= 90 ? 'High Protein + Creatine + S-Rank Recovery Shake' : 'Boiled Eggs, Oats & 4L Water'}
+                    </div>
+                </div>
+            `).join('');
         }
         load();
     </script>
