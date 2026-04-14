@@ -3,48 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S-RANK HUNTER SYSTEM</title>
+    <title>S-RANK HUNTER SYSTEM v6.0</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --neon: #00f2ff; --s-rank: #ff0044; }
-        body { background: #050505; color: white; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding: 20px; }
-        .main-box { background: #111; padding: 25px; border-radius: 20px; border: 1px solid #333; max-width: 400px; margin: auto; box-shadow: 0 0 20px rgba(0,242,255,0.1); }
-        input { width: 85%; padding: 12px; margin: 10px 0; background: #000; border: 1px solid var(--neon); color: white; border-radius: 8px; }
-        .file-btn { display: inline-block; padding: 10px; border: 1px dashed var(--neon); margin: 10px 0; cursor: pointer; width: 85%; font-size: 12px; }
-        button.awaken-btn { width: 92%; padding: 15px; background: var(--neon); border: none; font-weight: bold; border-radius: 8px; cursor: pointer; text-transform: uppercase; }
+        :root { --neon: #00f2ff; --s-rank: #ff0044; --dark-bg: #050505; --card-bg: #11111d; }
+        body { background: var(--dark-bg); color: white; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 15px; margin: 0; }
         
-        /* Card Style */
+        .main-box { background: #111; padding: 25px; border-radius: 20px; border: 1px solid #333; max-width: 400px; margin: 10px auto; box-shadow: 0 0 30px rgba(0,242,255,0.1); }
+        h2 { color: var(--neon); letter-spacing: 2px; font-size: 22px; margin-bottom: 20px; text-transform: uppercase; }
+        
+        input { width: 90%; padding: 12px; margin: 8px 0; background: #000; border: 1px solid #333; color: white; border-radius: 8px; font-size: 14px; outline: none; transition: 0.3s; }
+        input:focus { border-color: var(--neon); box-shadow: 0 0 10px rgba(0,242,255,0.2); }
+        
+        .file-btn { display: inline-block; padding: 12px; border: 1px dashed #444; margin: 10px 0; cursor: pointer; width: 90%; font-size: 13px; color: #888; border-radius: 8px; }
+        .awaken-btn { width: 95%; padding: 15px; background: var(--neon); border: none; font-weight: 900; border-radius: 8px; cursor: pointer; text-transform: uppercase; color: #000; margin-top: 10px; }
+        
+        /* Card UI */
         .card { 
-            background: linear-gradient(145deg, #161625, #0a0a12); margin-top: 20px; padding: 15px; border-radius: 15px; 
-            display: flex; flex-direction: column; gap: 12px; text-align: left; border: 1px solid #222; position: relative; overflow: hidden;
+            background: var(--card-bg); margin-top: 20px; padding: 18px; border-radius: 18px; 
+            text-align: left; border: 1px solid #222; position: relative; overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.5);
         }
-        .user-header { display: flex; align-items: center; gap: 15px; }
-        .user-img { width: 65px; height: 65px; border-radius: 50%; border: 2px solid var(--neon); object-fit: cover; box-shadow: 0 0 10px var(--neon); }
+        .user-header { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
+        .user-img { width: 70px; height: 70px; border-radius: 50%; border: 2px solid var(--neon); object-fit: cover; }
         
-        /* Quest Bars */
-        .quest-sec { background: rgba(0,0,0,0.4); padding: 10px; border-radius: 10px; }
-        .q-row { margin: 8px 0; }
-        .q-info { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; }
-        .bar-bg { background: #222; height: 6px; border-radius: 3px; position: relative; }
-        .bar-fill { background: var(--neon); height: 100%; border-radius: 3px; transition: 0.4s; box-shadow: 0 0 8px var(--neon); }
-        .btn-plus { background: var(--neon); color: black; border: none; border-radius: 4px; padding: 0 8px; cursor: pointer; font-weight: bold; font-size: 14px; float: right; margin-top: -18px; }
+        /* Workout Section */
+        .quest-sec { background: rgba(0,0,0,0.3); padding: 12px; border-radius: 12px; border: 1px solid #222; }
+        .q-row { margin-bottom: 18px; }
+        .q-info { display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; margin-bottom: 6px; letter-spacing: 1px; }
+        .bar-bg { background: #222; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 8px; }
+        .bar-fill { height: 100%; border-radius: 4px; transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        
+        .record-btn { 
+            width: 100%; background: transparent; border: 1px solid var(--neon); color: var(--neon); 
+            border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; padding: 8px;
+            text-transform: uppercase; transition: 0.3s;
+        }
+        .record-btn:active { background: var(--neon); color: black; }
 
-        .diet-tag { font-size: 11px; border-left: 3px solid var(--neon); padding-left: 8px; margin-top: 5px; color: #aaa; }
+        .diet-tag { font-size: 11px; border-left: 3px solid var(--neon); padding-left: 10px; margin-top: 12px; color: #888; line-height: 1.4; }
     </style>
 </head>
 <body>
 
     <div class="main-box">
-        <h2 style="color: var(--neon); letter-spacing: 2px;">SYSTEM INTERFACE</h2>
-        <input type="text" id="name" placeholder="ENTER HUNTER NAME">
+        <h2>System Interface</h2>
+        <input type="text" id="name" placeholder="Enter Hunter Name">
+        <input type="number" id="phone" placeholder="Enter Phone Number (For Guild Notice)">
         <label class="file-btn">
-            <input type="file" id="pic" accept="image/*" style="display:none" onchange="document.getElementById('st').innerText='Photo Ready ✅'">
-            <span id="st">UPLOAD HUNTER IMAGE</span>
+            <input type="file" id="pic" accept="image/*" style="display:none" onchange="document.getElementById('st').innerText='Image Captured ✅'">
+            <span id="st">Upload Hunter Profile Photo</span>
         </label>
-        <button class="awaken-btn" onclick="reg()">AWAKEN</button>
+        <button class="awaken-btn" onclick="reg()">Begin Awakening</button>
     </div>
 
-    <div id="list" style="max-width:400px; margin:auto;"></div>
+    <div id="list" style="max-width:420px; margin:auto; padding-bottom: 50px;"></div>
 
     <script>
         const SUPABASE_URL = 'https://wtuqqbgdekhuwieznaxw.supabase.co'; 
@@ -53,18 +66,24 @@
 
         async function reg() {
             const n = document.getElementById('name').value;
+            const p = document.getElementById('phone').value;
             const f = document.getElementById('pic').files[0];
-            if(!n || !f) return alert("System requires Name and Image!");
+            
+            if(!n || !p || !f) return alert("[SYSTEM ERROR]: Name, Phone, and Image are mandatory.");
 
             const reader = new FileReader();
             reader.readAsDataURL(f);
             reader.onload = async () => {
                 const { error } = await sb.from('hunters').insert([{ 
-                    name: n, level: 1, image_url: reader.result,
+                    name: n, phone: p, level: 1, image_url: reader.result,
                     pushups: 0, situps: 0, squats: 0 
                 }]);
-                if(!error) location.reload();
-                else alert("Error connecting to Gate.");
+                if(!error) {
+                    alert(`[NOTICE]: Hunter ${n} has joined the Guild. Prepare for your first Quest.`);
+                    location.reload();
+                } else {
+                    alert("Gate connection failed. Try again.");
+                }
             };
         }
 
@@ -75,7 +94,7 @@
             if(!error) {
                 const { data: h } = await sb.from('hunters').select('*').eq('id', id).single();
                 if(h.pushups >= 100 && h.situps >= 100 && h.squats >= 100) {
-                    alert(`[LEVEL UP]\n\nHunter ${name}, you have surpassed your limits!\nNew Level: ${level + 1}`);
+                    alert(`[LEVEL UP]: Congratulations ${name}! You have completed the Daily Quest. Your strength is growing.\nNew Level: ${level + 1}`);
                     await sb.from('hunters').update({ level: level + 1, pushups: 0, situps: 0, squats: 0 }).eq('id', id);
                 }
                 load();
@@ -85,14 +104,18 @@
         async function load() {
             const { data } = await sb.from('hunters').select('*').order('created_at', { ascending: false });
             if(data) {
-                document.getElementById('list').innerHTML = data.map(h => `
-                    <div class="card" style="border-color: ${h.level >= 10 ? 'var(--s-rank)' : '#222'}">
+                document.getElementById('list').innerHTML = data.map(h => {
+                    const isSRank = h.level >= 10;
+                    const themeColor = isSRank ? 'var(--s-rank)' : 'var(--neon)';
+                    
+                    return `
+                    <div class="card" style="border-color: ${isSRank ? '#ff0044' : '#222'}">
                         <div class="user-header">
-                            <img src="${h.image_url}" class="user-img" style="border-color: ${h.level >= 10 ? 'var(--s-rank)' : 'var(--neon)'}">
+                            <img src="${h.image_url}" class="user-img" style="border-color: ${themeColor}">
                             <div>
-                                <div style="font-weight:bold; font-size:18px; text-transform:uppercase;">${h.name}</div>
-                                <div style="color:${h.level >= 10 ? 'var(--s-rank)' : 'var(--neon)'}; font-size:12px; font-weight:bold;">
-                                    ${h.level >= 10 ? 'S-RANK' : 'E-RANK'} HUNTER | LVL ${h.level}
+                                <div style="font-weight:bold; font-size:19px; text-transform:uppercase; letter-spacing:1px;">${h.name}</div>
+                                <div style="color:${themeColor}; font-size:12px; font-weight:bold;">
+                                    ${isSRank ? 'S-RANK ELITE' : 'E-RANK HUNTER'} | LEVEL ${h.level}
                                 </div>
                             </div>
                         </div>
@@ -100,18 +123,28 @@
                         <div class="quest-sec">
                             ${['pushups', 'situps', 'squats'].map(q => `
                                 <div class="q-row">
-                                    <div class="q-info"><span>${q.toUpperCase()}</span><span>${h[q] || 0}/100</span></div>
-                                    <div class="bar-bg"><div class="bar-fill" style="width:${(h[q] || 0)}%; background:${h.level >= 10 ? 'var(--s-rank)' : 'var(--neon)'}"></div></div>
-                                    <button class="btn-plus" onclick="updateQuest('${h.id}', '${q}', ${h[q]||0}, '${h.name}', ${h.level})">+</button>
+                                    <div class="q-info">
+                                        <span>${q.toUpperCase()}</span>
+                                        <span style="color:${themeColor}">${h[q] || 0}/100</span>
+                                    </div>
+                                    <div class="bar-bg">
+                                        <div class="bar-fill" style="width:${(h[q] || 0)}%; background:${themeColor}; box-shadow: 0 0 10px ${themeColor}66;"></div>
+                                    </div>
+                                    <button class="record-btn" style="border-color:${themeColor}; color:${themeColor}" 
+                                        onclick="updateQuest('${h.id}', '${q}', ${h[q]||0}, '${h.name}', ${h.level})">
+                                        + Record 10 Reps
+                                    </button>
                                 </div>
                             `).join('')}
                         </div>
 
                         <div class="diet-tag">
-                            <b>SYSTEM DIET:</b> ${h.level >= 10 ? 'High Protein + Recovery Supplements' : '4L Water, 6 Eggs, Oats'}
+                            <b style="color:white">SYSTEM DIET:</b><br>
+                            ${isSRank ? 'Elite Protocol: High Protein, Creatine, & S-Rank Mana Recovery Meals.' : 'Beginner Protocol: 4L Water, 6 Eggs, Oats & Natural Recovery.'}
                         </div>
                     </div>
-                `).join('');
+                    `;
+                }).join('');
             }
         }
         load();
