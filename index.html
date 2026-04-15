@@ -3,108 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S-RANK SYSTEM: PRIVATE ACCESS</title>
+    <title>S-Rank Hunter System</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --neon: #00f2ff; --dark: #050505; --card: #11111d; }
-        body { background: var(--dark); color: white; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; margin: 0; }
-        .box { background: #111; padding: 25px; border-radius: 15px; border: 1px solid #333; max-width: 380px; margin: 20px auto; box-shadow: 0 0 20px rgba(0,242,255,0.1); }
-        input { width: 90%; padding: 12px; margin: 10px 0; background: #000; border: 1px solid #444; color: white; border-radius: 8px; outline: none; transition: 0.3s; }
-        input:focus { border-color: var(--neon); box-shadow: 0 0 10px var(--neon); }
-        .btn { width: 95%; padding: 14px; background: var(--neon); border: none; font-weight: bold; cursor: pointer; border-radius: 8px; margin-top: 10px; text-transform: uppercase; letter-spacing: 1px; }
+        :root { --neon: #00f2ff; --bg: #0a0a0a; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; padding: 20px; }
+        .container { background: #111; border: 2px solid var(--neon); border-radius: 15px; padding: 30px; width: 100%; max-width: 400px; box-shadow: 0 0 20px var(--neon); }
+        h2 { color: var(--neon); text-align: center; text-transform: uppercase; letter-spacing: 2px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: var(--neon); border: none; color: black; font-weight: bold; cursor: pointer; border-radius: 5px; text-transform: uppercase; transition: 0.3s; margin-top: 10px; }
+        button:hover { background: white; box-shadow: 0 0 15px white; }
         .hidden { display: none; }
-        .card { background: var(--card); border: 2px solid var(--neon); padding: 20px; border-radius: 20px; max-width: 380px; margin: 20px auto; position: relative; overflow: hidden; }
-        .stat-btn { width: 100%; padding: 12px; background: transparent; border: 1px solid var(--neon); color: var(--neon); border-radius: 10px; cursor: pointer; margin-top: 10px; font-weight: bold; }
-        .stat-btn:active { background: var(--neon); color: black; }
-        .logout-btn { background: #ff4444; color: white; width: 150px; margin-top: 30px; }
+        .stat-card { background: #1a1a1a; padding: 15px; border-radius: 10px; margin: 10px 0; border-left: 4px solid var(--neon); }
+        .rank { font-size: 24px; font-weight: bold; color: gold; text-align: center; display: block; }
+        img { width: 80px; height: 80px; border-radius: 50%; border: 2px solid var(--neon); display: block; margin: 0 auto 10px; object-fit: cover; }
     </style>
 </head>
 <body>
 
-    <h1 style="color: var(--neon); text-shadow: 0 0 10px var(--neon);">S-RANK SYSTEM</h1>
+<div class="container" id="auth-section">
+    <h2>System Access</h2>
+    <input type="email" id="email" placeholder="Enter Hunter Email">
+    <button onclick="sendOTP()">Send OTP</button>
+    <input type="text" id="otp" placeholder="Enter 6-Digit OTP">
+    <button onclick="verifyOTP()">Verify & Login</button>
+</div>
 
-    <div id="auth-section" class="box">
-        <h2 id="auth-title">SYSTEM LOGIN</h2>
-        <input type="email" id="email" placeholder="Enter Hunter Email">
-        <button class="btn" id="send-btn" onclick="sendOTP()">Send Access Code</button>
+<div class="container hidden" id="dashboard-section">
+    <img id="pfp" src="https://via.placeholder.com/80" alt="Hunter">
+    <span class="rank" id="rank-display">E-RANK</span>
+    <h2 id="hunter-name">Hunter</h2>
+    
+    <div class="stat-card">Pushups: <span id="p-count">0</span></div>
+    <div class="stat-card">Situps: <span id="si-count">0</span></div>
+    <div class="stat-card">Squats: <span id="sq-count">0</span></div>
+    
+    <button onclick="updateStat('pushups')">+10 Pushups</button>
+    <button onclick="updateStat('situps')">+10 Situps</button>
+    <button onclick="updateStat('squats')">+10 Squats</button>
+    <button style="background: #ff4444;" onclick="logout()">Disconnect</button>
+</div>
+
+<script>
+    const SB_URL = "YOUR_SUPABASE_URL";
+    const SB_KEY = "YOUR_SUPABASE_ANON_KEY";
+    const supabase = supabase.createClient(SB_URL, SB_KEY);
+
+    async function sendOTP() {
+        const email = document.getElementById('email').value;
+        const { error } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true }});
+        if (error) alert(error.message);
+        else alert("OTP sent to your email!");
+    }
+
+    async function verifyOTP() {
+        const email = document.getElementById('email').value;
+        const token = document.getElementById('otp').value;
+        const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
         
-        <div id="otp-input-area" class="hidden">
-            <p style="color: #aaa; font-size: 14px;">Check your email for OTP or Login Link</p>
-            <input type="number" id="otp-code" placeholder="Enter 6-Digit OTP">
-            <button class="btn" onclick="verifyOTP()">Verify & Awaken</button>
-        </div>
-    </div>
-
-    <div id="reg-section" class="box hidden">
-        <h2 style="color: var(--neon);">NEW HUNTER DETECTED</h2>
-        <p>Register your DNA to the system</p>
-        <input type="text" id="hunter-name" placeholder="Full Name">
-        <p style="text-align:left; font-size:12px; margin-left:20px;">Profile Picture:</p>
-        <input type="file" id="hunter-pic" accept="image/*">
-        <button class="btn" onclick="registerHunter()">Initialize Awakening</button>
-    </div>
-
-    <div id="dashboard" class="hidden">
-        <div id="profile-card"></div>
-        <button class="btn logout-btn" onclick="logout()">Logout</button>
-    </div>
-
-    <script>
-        const SUPABASE_URL = 'https://wtuqqbgdekhuwieznaxw.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0dXFxYmdkZWtodXdpZXpuYXh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxODI5MzgsImV4cCI6MjA5MTc1ODkzOH0.reg4QhMeaEerMVsIFNebgQ7pn2U3RtvDSS59NGrVRrY';
-        const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        // --- AUTH FUNCTIONS ---
-        async function sendOTP() {
-            const email = document.getElementById('email').value;
-            if(!email) return alert("Email is required!");
-            
-            const { error } = await sb.auth.signInWithOtp({ email });
-            if(error) alert("Error: " + error.message);
-            else {
-                alert("OTP/Link Sent! Check your inbox.");
-                document.getElementById('otp-input-area').classList.remove('hidden');
-                document.getElementById('send-btn').innerText = "Resend Code";
-            }
+        if (error) {
+            // Backup check if type is signup
+            const { error: error2 } = await supabase.auth.verifyOtp({ email, token, type: 'signup' });
+            if (error2) alert("Invalid OTP Hunter!");
+            else checkSession();
+        } else {
+            checkSession();
         }
+    }
 
-        async function verifyOTP() {
-            const email = document.getElementById('email').value;
-            const token = document.getElementById('otp-code').value;
-            const { error } = await sb.auth.verifyOtp({ email, token, type: 'email' });
-            if(error) alert("Invalid Code!"); else checkStatus();
-        }
-
-        async function logout() { await sb.auth.signOut(); location.reload(); }
-
-        // --- PROFILE LOGIC ---
-        async function checkStatus() {
-            const { data: { user } } = await sb.auth.getUser();
-            if(!user) return;
-
+    async function checkSession() {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
             document.getElementById('auth-section').classList.add('hidden');
-            
-            // Check if user already has a hunter profile
-            const { data, error } = await sb.from('hunters').select('*').eq('user_id', user.id).maybeSingle();
-            
-            if(data) {
-                document.getElementById('dashboard').classList.remove('hidden');
-                document.getElementById('reg-section').classList.add('hidden');
-                renderHunter(data);
-            } else {
-                document.getElementById('reg-section').classList.remove('hidden');
-            }
+            document.getElementById('dashboard-section').classList.remove('hidden');
+            loadHunterData(session.user.id);
+        }
+    }
+
+    async function loadHunterData(userId) {
+        let { data, error } = await supabase.from('hunters').select('*').eq('user_id', userId).single();
+        
+        if (!data) {
+            // First time login - create record
+            const { data: newUser } = await supabase.from('hunters').insert([{ user_id: userId, pushups: 0, situps: 0, squats: 0 }]).select().single();
+            data = newUser;
         }
 
-        async function registerHunter() {
-            const { data: { user } } = await sb.auth.getUser();
-            const name = document.getElementById('hunter-name').value;
-            const file = document.getElementById('hunter-pic').files[0];
+        document.getElementById('hunter-name').innerText = data.user_id.substring(0,8);
+        document.getElementById('p-count').innerText = data.pushups;
+        document.getElementById('si-count').innerText = data.situps;
+        document.getElementById('sq-count').innerText = data.squats;
+        if(data.image_url) document.getElementById('pfp').src = data.image_url;
+    }
 
-            if(!name || !file) return alert("All fields are mandatory!");
+    async function updateStat(type) {
+        const { data: { session } } = await supabase.auth.getSession();
+        const userId = session.user.id;
+        
+        const currentVal = parseInt(document.getElementById(type === 'pushups' ? 'p-count' : type === 'situps' ? 'si-count' : 'sq-count').innerText);
+        const newVal = currentVal + 10;
 
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = async () => {
-                const { error } = await sb.from('hunters').insert([{
-                    name: name,
+        const { error } = await supabase.from('hunters').update({ [type]: newVal }).eq('user_id', userId);
+        
+        if (!error) loadHunterData(userId);
+        else alert("Sync Failed!");
+    }
+
+    async function logout() {
+        await supabase.auth.signOut();
+        window.location.reload();
+    }
+
+    checkSession();
+</script>
+
+</body>
+</html>
