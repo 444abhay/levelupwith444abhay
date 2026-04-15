@@ -6,40 +6,63 @@
     <title>Solo Leveling: Hunter System</title>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
-        :root { --neon: #00f2ff; --bg: #0a0a0a; }
+        :root { --neon: #00f2ff; --bg: #0a0a0a; --dark-blue: #001a1d; }
+        
         body { 
             background: var(--bg); 
             color: white; 
             font-family: 'Segoe UI', sans-serif; 
             display: flex; 
-            justify-content: center; 
+            flex-direction: column;
+            align-items: center;
             padding: 20px; 
             margin: 0;
             overflow-x: hidden;
         }
+
+        /* Ambient Glow Animation */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 50%, var(--dark-blue) 0%, transparent 80%);
+            z-index: -1;
+            animation: pulse 4s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
         .container { 
-            background: #111; 
+            background: rgba(17, 17, 17, 0.9); 
             border: 2px solid var(--neon); 
             border-radius: 15px; 
             padding: 25px; 
             width: 100%; 
             max-width: 380px; 
-            box-shadow: 0 0 25px rgba(0, 242, 255, 0.2); 
+            box-shadow: 0 0 30px rgba(0, 242, 255, 0.15); 
             text-align: center; 
-            margin-top: 30px;
+            margin-top: 20px;
+            backdrop-filter: blur(10px);
         }
-        h2 { color: var(--neon); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; font-size: 22px; }
-        input { 
-            width: 100%; 
-            padding: 15px; 
-            margin: 10px 0; 
+
+        h2 { color: var(--neon); text-transform: uppercase; letter-spacing: 4px; margin-bottom: 20px; font-size: 20px; text-shadow: 0 0 10px var(--neon); }
+
+        .stat-card { 
             background: #1a1a1a; 
-            border: 1px solid #333; 
-            color: white; 
+            padding: 15px; 
             border-radius: 10px; 
-            box-sizing: border-box; 
-            font-size: 16px; /* Prevents iOS zoom */
+            margin: 12px 0; 
+            border-left: 5px solid var(--neon); 
+            text-align: left; 
+            font-size: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
+
         button { 
             width: 100%; 
             padding: 15px; 
@@ -50,35 +73,120 @@
             cursor: pointer; 
             border-radius: 10px; 
             text-transform: uppercase; 
-            margin-top: 15px;
-            font-size: 14px;
-            -webkit-tap-highlight-color: transparent; /* Fixes blue flash on mobile */
+            margin-top: 10px;
+            font-size: 13px;
+            transition: 0.3s;
             touch-action: manipulation;
         }
-        button:active { transform: scale(0.98); opacity: 0.8; }
-        .hidden { display: none !important; }
-        .stat-card { 
-            background: #1a1a1a; 
-            padding: 15px; 
-            border-radius: 10px; 
-            margin: 12px 0; 
-            border-left: 5px solid var(--neon); 
-            text-align: left; 
-            font-size: 18px;
+
+        button:active { transform: scale(0.95); background: white; }
+
+        /* Music Player UI */
+        .music-player {
+            margin-top: 20px;
+            border-top: 1px solid #333;
+            padding-top: 20px;
         }
+
+        .track-info { font-size: 14px; color: var(--neon); margin-bottom: 10px; font-weight: bold; }
+
+        .visualizer {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            height: 30px;
+            gap: 3px;
+            margin-bottom: 15px;
+        }
+
+        .bar { width: 4px; background: var(--neon); border-radius: 2px; animation: bounce 0.5s infinite alternate; }
+        .bar:nth-child(2) { animation-delay: 0.1s; }
+        .bar:nth-child(3) { animation-delay: 0.2s; }
+        .bar:nth-child(4) { animation-delay: 0.3s; }
+
+        @keyframes bounce {
+            from { height: 5px; }
+            to { height: 25px; }
+        }
+
+        .hidden { display: none; }
     </style>
 </head>
 <body>
 
-<div class="container" id="auth-section">
-    <h2>SYSTEM ACCESS</h2>
-    <p style="color: #666; font-size: 12px; margin-bottom: 15px;">AUTHENTICATE TO AWAKEN</p>
-    <input type="email" id="email" placeholder="Hunter Email" autocomplete="email">
-    <button type="button" id="sendBtn">SEND ACCESS CODE</button>
-    <div style="margin: 25px 0; height: 1px; background: #222;"></div>
-    <input type="text" id="otp" placeholder="Enter 6-Digit OTP" inputmode="numeric">
-    <button type="button" id="verifyBtn">INITIALIZE SYSTEM</button>
+<div class="container">
+    <h2>HUNTER SYSTEM</h2>
+    <p style="font-size: 12px; color: #888; margin-top: -15px; margin-bottom: 20px;">RANK: E-CLASS (LEVELING...)</p>
+
+    <div class="stat-card">
+        <span>PUSHUPS</span>
+        <span id="p-count" style="color:var(--neon)">0</span>
+    </div>
+    <div class="stat-card">
+        <span>SITUPS</span>
+        <span id="si-count" style="color:var(--neon)">0</span>
+    </div>
+
+    <button id="addPushups">+10 PUSHUPS</button>
+    <button id="addSitups">+10 SITUPS</button>
+
+    <div class="music-player">
+        <div class="track-info">NOW PLAYING: SYSTEM BGM</div>
+        <div class="visualizer" id="viz">
+            <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+        </div>
+        <button id="playBtn" style="background: transparent; border: 1px solid var(--neon); color: var(--neon);">PLAY MUSIC</button>
+        <audio id="bgMusic" loop>
+            <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
+        </audio>
+    </div>
 </div>
 
-<div class="container hidden" id="
-    
+<script>
+    // Supabase Setup
+    const SB_URL = "https://wtuaqbgdekhuwieznaxw.supabase.co";
+    const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0dXFxYmdkZWtodXdpZXpuYXh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxODI5MzgsImV4cCI6MjA5MTc1ODkzOH0.reg4QhMeaEerMVsIFNebgQ7pn2U3RtvDSS59NGrVRrY";
+
+    const _supabase = supabase.createClient(SB_URL, SB_KEY);
+    const audio = document.getElementById('bgMusic');
+    const playBtn = document.getElementById('playBtn');
+    const viz = document.getElementById('viz');
+
+    // Default Stats (Local for now, connects to DB silently)
+    let stats = { pushups: 0, situps: 0 };
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Stats Click Logic
+        document.getElementById('addPushups').addEventListener('click', () => updateStat('pushups'));
+        document.getElementById('addSitups').addEventListener('click', () => updateStat('situps'));
+
+        // Music Logic
+        playBtn.addEventListener('click', () => {
+            if (audio.paused) {
+                audio.play();
+                playBtn.innerText = "PAUSE MUSIC";
+                viz.classList.remove('hidden');
+            } else {
+                audio.pause();
+                playBtn.innerText = "PLAY MUSIC";
+                viz.classList.add('hidden');
+            }
+        });
+
+        viz.classList.add('hidden'); // Initially hidden
+    });
+
+    function updateStat(type) {
+        stats[type] += 10;
+        document.getElementById(type === 'pushups' ? 'p-count' : 'si-count').innerText = stats[type];
+        
+        // Background Save to Supabase (Optional, doesn't block UI)
+        _supabase.from('hunters').upsert([{ 
+            id: 1, // Fixed ID for testing without Login
+            [type]: stats[type] 
+        }]).then(() => console.log("Stats synced."));
+    }
+</script>
+
+</body>
+</html>
