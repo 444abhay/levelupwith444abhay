@@ -1,76 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S-Rank Hunter System</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root { --neon: #00f2ff; --bg: #0a0a0a; }
+        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; padding: 20px; }
+        .container { background: #111; border: 2px solid var(--neon); border-radius: 15px; padding: 30px; width: 100%; max-width: 400px; box-shadow: 0 0 20px var(--neon); }
+        h2 { color: var(--neon); text-align: center; text-transform: uppercase; letter-spacing: 2px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: var(--neon); border: none; color: black; font-weight: bold; cursor: pointer; border-radius: 5px; text-transform: uppercase; transition: 0.3s; margin-top: 10px; }
+        button:hover { background: white; box-shadow: 0 0 15px white; }
+        .hidden { display: none; }
+        .stat-card { background: #1a1a1a; padding: 15px; border-radius: 10px; margin: 10px 0; border-left: 4px solid var(--neon); }
+    </style>
+</head>
+<body>
+
+<div class="container" id="auth-section">
+    <h2>System Access</h2>
+    <input type="email" id="email" placeholder="Enter Hunter Email">
+    <button type="button" onclick="sendOTP()">Send OTP</button>
+    <input type="text" id="otp" placeholder="Enter 6-Digit OTP">
+    <button type="button" onclick="verifyOTP()">Verify & Login</button>
+</div>
+
+<div class="container hidden" id="dashboard-section">
+    <h2 id="hunter-name">Hunter Profile</h2>
+    <div class="stat-card">Pushups: <span id="p-count">0</span></div>
+    <div class="stat-card">Situps: <span id="si-count">0</span></div>
+    <button onclick="updateStat('pushups')">+10 Pushups</button>
+    <button style="background: #ff4444;" onclick="logout()">Disconnect</button>
+</div>
+
 <script>
-    // 1. Apni details yahan dalo (Double check URL and Key)
-    const SB_URL = "YOUR_SUPABASE_URL";
-    const SB_KEY = "YOUR_SUPABASE_ANON_KEY";
-    
-    // 2. Client initialization (Is line ko dhyan se dekho)
-    const supabase = supabase.createClient(SB_URL, SB_KEY);
+    // --- KEYS APPLIED BY SYSTEM ---
+    const SB_URL = "https://wtuaqbgdekhuwieznaxw.supabase.co"; 
+    const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0dXFxYmdkZWtodXdpZXpuYXh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxODI5MzgsImV4cCI6MjA5MTc1ODkzOH0.reg4QhMeaEerMVsIFNebgQ7pn2U3RtvDSS59NGrVRrY";
+
+    const { createClient } = supabase;
+    const _supabase = createClient(SB_URL, SB_KEY);
 
     async function sendOTP() {
-        console.log("Send OTP button clicked!"); // Check karne ke liye
-        const emailInput = document.getElementById('email').value;
-        
-        if (!emailInput) {
-            alert("Pehle email dalo, Hunter!");
-            return;
-        }
+        const email = document.getElementById('email').value;
+        if(!email) return alert("Email dalo!");
 
-        const { data, error } = await supabase.auth.signInWithOtp({ 
-            email: emailInput, 
+        const { error } = await _supabase.auth.signInWithOtp({ 
+            email: email,
             options: { shouldCreateUser: true }
         });
 
-        if (error) {
-            console.error("Supabase Error:", error.message);
-            alert("Error: " + error.message);
-        } else {
-            alert("OTP bhej diya gaya hai! Check your inbox.");
-        }
+        if (error) alert("Error: " + error.message);
+        else alert("OTP Sent! Check your email inbox.");
     }
 
     async function verifyOTP() {
-        const emailInput = document.getElementById('email').value;
-        const tokenInput = document.getElementById('otp').value;
-
-        if (!tokenInput) {
-            alert("OTP toh dalo!");
-            return;
-        }
-
-        // OTP verification logic
-        const { data, error } = await supabase.auth.verifyOtp({
-            email: emailInput,
-            token: tokenInput,
-            type: 'email' 
+        const email = document.getElementById('email').value;
+        const token = document.getElementById('otp').value;
+        
+        const { error } = await _supabase.auth.verifyOtp({
+            email, token, type: 'email'
         });
 
         if (error) {
-            // Agar pehli baar fail ho toh signup try karo
-            const { error: error2 } = await supabase.auth.verifyOtp({
-                email: emailInput,
-                token: tokenInput,
-                type: 'signup'
-            });
-            
-            if (error2) alert("Invalid OTP!");
-            else window.location.reload();
+            const { error: e2 } = await _supabase.auth.verifyOtp({ email, token, type: 'signup' });
+            if (e2) alert("Invalid OTP!");
+            else location.reload();
         } else {
-            window.location.reload();
+            location.reload();
         }
     }
 
-    // Baaki ke functions (checkSession, loadHunterData, updateStat) pichle code wale hi rahenge
-</script>
-        else alert("Sync Failed!");
+    async function checkSession() {
+        const { data: { session } } = await _supabase.auth.getSession();
+        if (session) {
+            document.getElementById('auth-section').classList.add('hidden');
+            document.getElementById('dashboard-section').classList.remove('hidden');
+            loadData(session.user.id);
+        }
+    }
+
+    async function loadData(uid) {
+        let { data } = await _supabase.from('hunters').select('*').eq('user_id', uid).single();
+        if(data) {
+            document.getElementById('p-count').innerText = data.pushups || 0;
+            document.getElementById('si-count').innerText = data.situps || 0;
+        }
+    }
+
+    async function updateStat(type) {
+        const { data: { session } } = await _supabase.auth.getSession();
+        const curVal = parseInt(document.getElementById('p-count').innerText);
+        await _supabase.from('hunters').update({ [type]: curVal + 10 }).eq('user_id', session.user.id);
+        loadData(session.user.id);
     }
 
     async function logout() {
-        await supabase.auth.signOut();
-        window.location.reload();
+        await _supabase.auth.signOut();
+        location.reload();
     }
 
-    checkSession();
+    window.onload = checkSession;
 </script>
-
 </body>
 </html>
