@@ -2,132 +2,83 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Solo Leveling: Hunter System</title>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
         :root { --neon: #00f2ff; --bg: #0a0a0a; }
-        body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; padding: 20px; margin: 0; }
-        .container { background: #111; border: 2px solid var(--neon); border-radius: 15px; padding: 30px; width: 100%; max-width: 400px; box-shadow: 0 0 25px rgba(0, 242, 255, 0.2); text-align: center; margin-top: 50px; }
-        h2 { color: var(--neon); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 20px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; background: #1a1a1a; border: 1px solid #333; color: white; border-radius: 8px; box-sizing: border-box; outline: none; }
-        input:focus { border-color: var(--neon); }
-        button { width: 100%; padding: 12px; background: var(--neon); border: none; color: black; font-weight: bold; cursor: pointer; border-radius: 8px; text-transform: uppercase; transition: 0.3s; margin-top: 15px; }
-        button:hover { background: white; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0, 242, 255, 0.3); }
-        .hidden { display: none; }
-        .stat-card { background: #1a1a1a; padding: 15px; border-radius: 10px; margin: 10px 0; border-left: 5px solid var(--neon); text-align: left; }
+        body { 
+            background: var(--bg); 
+            color: white; 
+            font-family: 'Segoe UI', sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            padding: 20px; 
+            margin: 0;
+            overflow-x: hidden;
+        }
+        .container { 
+            background: #111; 
+            border: 2px solid var(--neon); 
+            border-radius: 15px; 
+            padding: 25px; 
+            width: 100%; 
+            max-width: 380px; 
+            box-shadow: 0 0 25px rgba(0, 242, 255, 0.2); 
+            text-align: center; 
+            margin-top: 30px;
+        }
+        h2 { color: var(--neon); text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; font-size: 22px; }
+        input { 
+            width: 100%; 
+            padding: 15px; 
+            margin: 10px 0; 
+            background: #1a1a1a; 
+            border: 1px solid #333; 
+            color: white; 
+            border-radius: 10px; 
+            box-sizing: border-box; 
+            font-size: 16px; /* Prevents iOS zoom */
+        }
+        button { 
+            width: 100%; 
+            padding: 15px; 
+            background: var(--neon); 
+            border: none; 
+            color: black; 
+            font-weight: bold; 
+            cursor: pointer; 
+            border-radius: 10px; 
+            text-transform: uppercase; 
+            margin-top: 15px;
+            font-size: 14px;
+            -webkit-tap-highlight-color: transparent; /* Fixes blue flash on mobile */
+            touch-action: manipulation;
+        }
+        button:active { transform: scale(0.98); opacity: 0.8; }
+        .hidden { display: none !important; }
+        .stat-card { 
+            background: #1a1a1a; 
+            padding: 15px; 
+            border-radius: 10px; 
+            margin: 12px 0; 
+            border-left: 5px solid var(--neon); 
+            text-align: left; 
+            font-size: 18px;
+        }
     </style>
 </head>
 <body>
 
 <div class="container" id="auth-section">
     <h2>SYSTEM ACCESS</h2>
-    <p style="color: #666; font-size: 13px;">Enter credentials to begin Awakening.</p>
-    <input type="email" id="email" placeholder="Hunter Email">
+    <p style="color: #666; font-size: 12px; margin-bottom: 15px;">AUTHENTICATE TO AWAKEN</p>
+    <input type="email" id="email" placeholder="Hunter Email" autocomplete="email">
     <button type="button" id="sendBtn">SEND ACCESS CODE</button>
-    <div style="margin: 20px 0; height: 1px; background: #333;"></div>
-    <input type="text" id="otp" placeholder="Enter 6-Digit OTP">
+    <div style="margin: 25px 0; height: 1px; background: #222;"></div>
+    <input type="text" id="otp" placeholder="Enter 6-Digit OTP" inputmode="numeric">
     <button type="button" id="verifyBtn">INITIALIZE SYSTEM</button>
 </div>
 
-<div class="container hidden" id="dashboard-section">
-    <h2 id="hunter-id">HUNTER ACTIVE</h2>
-    <div class="stat-card">Pushups: <span id="p-count">0</span></div>
-    <div class="stat-card">Situps: <span id="si-count">0</span></div>
-    <button id="addPushups">+10 PUSHUPS</button>
-    <button id="addSitups">+10 SITUPS</button>
-    <button style="background: #ff4d4d; color: white; margin-top: 30px;" id="logoutBtn">SHUTDOWN SYSTEM</button>
-</div>
-
-<script>
-    // Configured Credentials
-    const SB_URL = "https://wtuaqbgdekhuwieznaxw.supabase.co";
-    const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0dXFxYmdkZWtodXdpZXpuYXh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxODI5MzgsImV4cCI6MjA5MTc1ODkzOH0.reg4QhMeaEerMVsIFNebgQ7pn2U3RtvDSS59NGrVRrY";
-
-    let _supabase;
-
-    window.onload = function() {
-        if (typeof supabase !== 'undefined') {
-            _supabase = supabase.createClient(SB_URL, SB_KEY, {
-                auth: { persistSession: true, autoRefreshToken: true }
-            });
-
-            document.getElementById('sendBtn').onclick = sendOTP;
-            document.getElementById('verifyBtn').onclick = verifyOTP;
-            document.getElementById('addPushups').onclick = () => updateStat('pushups');
-            document.getElementById('addSitups').onclick = () => updateStat('situps');
-            document.getElementById('logoutBtn').onclick = logout;
-
-            checkSession();
-        } else {
-            alert("Library not loaded! Check internet connection.");
-        }
-    };
-
-    async function sendOTP() {
-        const email = document.getElementById('email').value;
-        if(!email) return alert("Email required!");
-
-        const { error } = await _supabase.auth.signInWithOtp({
-            email: email,
-            options: { shouldCreateUser: true }
-        });
-
-        if (error) {
-            console.error(error);
-            alert("Fetch Error: " + error.message);
-        } else {
-            alert("System: OTP sent to " + email);
-        }
-    }
-
-    async function verifyOTP() {
-        const email = document.getElementById('email').value;
-        const token = document.getElementById('otp').value;
-        if(!token) return alert("OTP required!");
-
-        const { error } = await _supabase.auth.verifyOtp({ email, token, type: 'email' });
-        
-        if (error) {
-            // Backup check for signup type OTP
-            const { error: err2 } = await _supabase.auth.verifyOtp({ email, token, type: 'signup' });
-            if (err2) alert("Invalid Code!");
-            else location.reload();
-        } else {
-            location.reload();
-        }
-    }
-
-    async function checkSession() {
-        const { data: { session } } = await _supabase.auth.getSession();
-        if (session) {
-            document.getElementById('auth-section').classList.add('hidden');
-            document.getElementById('dashboard-section').classList.remove('hidden');
-            loadData(session.user.id);
-        }
-    }
-
-    async function loadData(uid) {
-        let { data, error } = await _supabase.from('hunters').select('*').eq('user_id', uid).single();
-        if (data) {
-            document.getElementById('p-count').innerText = data.pushups || 0;
-            document.getElementById('si-count').innerText = data.situps || 0;
-        } else {
-            // Create record if new hunter
-            await _supabase.from('hunters').insert([{ user_id: uid, pushups: 0, situps: 0 }]);
-        }
-    }
-
-    async function updateStat(type) {
-        const { data: { session } } = await _supabase.auth.getSession();
-        if (!session) return;
-        
-        const countId = type === 'pushups' ? 'p-count' : 'si-count';
-        const current = parseInt(document.getElementById(countId).innerText);
-        
-        const { error } = await _supabase.from('hunters')
-            .update({ [type]: current + 10 })
-            .eq('user_id', session.user.id);
-            
-        if (!error) loadData(session.user
-                             
+<div class="container hidden" id="
+    
