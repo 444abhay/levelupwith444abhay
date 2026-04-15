@@ -4,36 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Solo Leveling: Hunter System</title>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <style>
         :root { --neon: #00f2ff; --bg: #0a0a0a; }
         body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; padding: 20px; }
         .container { background: #111; border: 2px solid var(--neon); border-radius: 15px; padding: 30px; width: 100%; max-width: 400px; box-shadow: 0 0 25px rgba(0, 242, 255, 0.2); text-align: center; }
         h2 { color: var(--neon); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 20px; }
         input { width: 100%; padding: 12px; margin: 10px 0; background: #1a1a1a; border: 1px solid #333; color: white; border-radius: 8px; box-sizing: border-box; outline: none; }
-        input:focus { border-color: var(--neon); box-shadow: 0 0 10px rgba(0, 242, 255, 0.3); }
-        button { width: 100%; padding: 12px; background: var(--neon); border: none; color: black; font-weight: bold; cursor: pointer; border-radius: 8px; text-transform: uppercase; transition: 0.3s; margin-top: 15px; font-size: 14px; }
-        button:hover { background: white; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255, 255, 255, 0.4); }
+        input:focus { border-color: var(--neon); }
+        button { width: 100%; padding: 12px; background: var(--neon); border: none; color: black; font-weight: bold; cursor: pointer; border-radius: 8px; text-transform: uppercase; transition: 0.3s; margin-top: 15px; -webkit-tap-highlight-color: transparent; }
+        button:active { transform: scale(0.95); background: white; }
         .hidden { display: none; }
-        .stat-card { background: #1a1a1a; padding: 15px; border-radius: 10px; margin: 10px 0; border-left: 5px solid var(--neon); text-align: left; font-size: 18px; }
-        .rank-tag { color: gold; font-weight: bold; font-size: 20px; margin-bottom: 10px; display: block; }
+        .stat-card { background: #1a1a1a; padding: 15px; border-radius: 10px; margin: 10px 0; border-left: 5px solid var(--neon); text-align: left; }
     </style>
 </head>
 <body>
 
 <div class="container" id="auth-section">
     <h2>SYSTEM ACCESS</h2>
-    <p style="color: #666; font-size: 13px;">Login to synchronize your Hunter Rank.</p>
-    <input type="email" id="email" placeholder="Enter Hunter Email">
+    <p style="color: #666; font-size: 13px;">Enter credentials to begin Awakening.</p>
+    <input type="email" id="email" placeholder="Hunter Email">
     <button type="button" id="sendBtn">SEND ACCESS CODE</button>
     <div style="margin: 20px 0; height: 1px; background: #333;"></div>
-    <input type="text" id="otp" placeholder="Enter 6-Digit OTP">
+    <input type="text" id="otp" placeholder="6-Digit OTP">
     <button type="button" id="verifyBtn">INITIALIZE SYSTEM</button>
 </div>
 
 <div class="container hidden" id="dashboard-section">
-    <span class="rank-tag">E-RANK HUNTER</span>
-    <h2 id="hunter-id">ID: LOADING...</h2>
+    <h2 id="hunter-id">ID: HUNTER ACTIVE</h2>
     <div class="stat-card">Pushups: <span id="p-count">0</span></div>
     <div class="stat-card">Situps: <span id="si-count">0</span></div>
     <button id="addPushups">+10 PUSHUPS</button>
@@ -42,23 +40,32 @@
 </div>
 
 <script>
-    // --- FINAL CONFIGURATION ---
-    const SB_URL = "https://wtuaqbgdekhuwieznaxw.supabase.co"; // Corrected from screenshot
+    // --- INTEGRATED DATA ---
+    const SB_URL = "https://wtuaqbgdekhuwieznaxw.supabase.co";
     const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0dXFxYmdkZWtodXdpZXpuYXh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxODI5MzgsImV4cCI6MjA5MTc1ODkzOH0.reg4QhMeaEerMVsIFNebgQ7pn2U3RtvDSS59NGrVRrY";
 
-    // Initialize Supabase correctly
-    const _supabase = supabase.createClient(SB_URL, SB_KEY);
+    let _supabase;
 
-    // Button Listeners (Isse click na hone wali problem solve hogi)
-    document.getElementById('sendBtn').addEventListener('click', sendOTP);
-    document.getElementById('verifyBtn').addEventListener('click', verifyOTP);
-    document.getElementById('addPushups').addEventListener('click', () => updateStat('pushups'));
-    document.getElementById('addSitups').addEventListener('click', () => updateStat('situps'));
-    document.getElementById('logoutBtn').addEventListener('click', logout);
+    window.onload = function() {
+        if (typeof supabase !== 'undefined') {
+            _supabase = supabase.createClient(SB_URL, SB_KEY);
+            
+            // Re-binding buttons for mobile/browser compatibility
+            document.getElementById('sendBtn').onclick = sendOTP;
+            document.getElementById('verifyBtn').onclick = verifyOTP;
+            document.getElementById('addPushups').onclick = () => updateStat('pushups');
+            document.getElementById('addSitups').onclick = () => updateStat('situps');
+            document.getElementById('logoutBtn').onclick = logout;
+
+            checkSession();
+        } else {
+            alert("Library not loaded! Check your internet.");
+        }
+    };
 
     async function sendOTP() {
         const email = document.getElementById('email').value;
-        if(!email) return alert("Email dalo!");
+        if(!email) return alert("Email required!");
 
         const { error } = await _supabase.auth.signInWithOtp({
             email: email,
@@ -66,24 +73,22 @@
         });
 
         if (error) alert("Error: " + error.message);
-        else alert("System: 6-Digit code dispatched to your email!");
+        else alert("System: 6-Digit code sent to " + email);
     }
 
     async function verifyOTP() {
         const email = document.getElementById('email').value;
         const token = document.getElementById('otp').value;
-        if(!token) return alert("OTP dalo!");
+        if(!token) return alert("OTP required!");
 
-        const { data, error } = await _supabase.auth.verifyOtp({
-            email, token, type: 'email'
-        });
-
+        const { error } = await _supabase.auth.verifyOtp({ email, token, type: 'email' });
+        
         if (error) {
             const { error: err2 } = await _supabase.auth.verifyOtp({ email, token, type: 'signup' });
             if (err2) alert("Invalid Code!");
-            else checkSession();
+            else location.reload();
         } else {
-            checkSession();
+            location.reload();
         }
     }
 
@@ -92,35 +97,29 @@
         if (session) {
             document.getElementById('auth-section').classList.add('hidden');
             document.getElementById('dashboard-section').classList.remove('hidden');
-            loadHunterData(session.user.id);
+            loadData(session.user.id);
         }
     }
 
-    async function loadHunterData(uid) {
+    async function loadData(uid) {
         let { data } = await _supabase.from('hunters').select('*').eq('user_id', uid).single();
-        if (!data) {
-            await _supabase.from('hunters').insert([{ user_id: uid, pushups: 0, situps: 0 }]);
-            loadHunterData(uid);
-            return;
+        if (data) {
+            document.getElementById('p-count').innerText = data.pushups || 0;
+            document.getElementById('si-count').innerText = data.situps || 0;
         }
-        document.getElementById('hunter-id').innerText = "ID: " + uid.substring(0, 8).toUpperCase();
-        document.getElementById('p-count').innerText = data.pushups || 0;
-        document.getElementById('si-count').innerText = data.situps || 0;
     }
 
     async function updateStat(type) {
         const { data: { session } } = await _supabase.auth.getSession();
         const current = parseInt(document.getElementById(type === 'pushups' ? 'p-count' : 'si-count').innerText);
-        const { error } = await _supabase.from('hunters').update({ [type]: current + 10 }).eq('user_id', session.user.id);
-        if(!error) loadHunterData(session.user.id);
+        await _supabase.from('hunters').update({ [type]: current + 10 }).eq('user_id', session.user.id);
+        loadData(session.user.id);
     }
 
     async function logout() {
         await _supabase.auth.signOut();
         location.reload();
     }
-
-    window.onload = checkSession;
 </script>
 
 </body>
