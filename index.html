@@ -3,73 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>S-Rank Hunter System</title>
+    <title>Solo Leveling: Hunter System</title>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --neon: #00f2ff; --bg: #0a0a0a; }
         body { background: var(--bg); color: white; font-family: 'Segoe UI', sans-serif; display: flex; justify-content: center; padding: 20px; }
-        .container { background: #111; border: 2px solid var(--neon); border-radius: 15px; padding: 30px; width: 100%; max-width: 400px; box-shadow: 0 0 20px var(--neon); }
-        h2 { color: var(--neon); text-align: center; text-transform: uppercase; letter-spacing: 2px; }
-        input { width: 100%; padding: 12px; margin: 10px 0; background: #222; border: 1px solid #444; color: white; border-radius: 5px; box-sizing: border-box; }
-        button { width: 100%; padding: 12px; background: var(--neon); border: none; color: black; font-weight: bold; cursor: pointer; border-radius: 5px; text-transform: uppercase; transition: 0.3s; margin-top: 10px; }
-        button:hover { background: white; box-shadow: 0 0 15px white; }
+        .container { background: #111; border: 2px solid var(--neon); border-radius: 15px; padding: 30px; width: 100%; max-width: 400px; box-shadow: 0 0 25px rgba(0, 242, 255, 0.2); text-align: center; }
+        h2 { color: var(--neon); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; margin: 10px 0; background: #1a1a1a; border: 1px solid #333; color: white; border-radius: 8px; box-sizing: border-box; outline: none; }
+        input:focus { border-color: var(--neon); box-shadow: 0 0 10px rgba(0, 242, 255, 0.3); }
+        button { width: 100%; padding: 12px; background: var(--neon); border: none; color: black; font-weight: bold; cursor: pointer; border-radius: 8px; text-transform: uppercase; transition: 0.3s; margin-top: 15px; font-size: 14px; }
+        button:hover { background: white; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255, 255, 255, 0.4); }
         .hidden { display: none; }
-        .stat-card { background: #1a1a1a; padding: 15px; border-radius: 10px; margin: 10px 0; border-left: 4px solid var(--neon); }
+        .stat-card { background: #1a1a1a; padding: 15px; border-radius: 10px; margin: 10px 0; border-left: 5px solid var(--neon); text-align: left; font-size: 18px; }
+        .rank-tag { color: gold; font-weight: bold; font-size: 20px; margin-bottom: 10px; display: block; }
     </style>
 </head>
 <body>
 
 <div class="container" id="auth-section">
-    <h2>System Access</h2>
-    <input type="email" id="email" placeholder="Enter Hunter Email">
-    <button type="button" onclick="sendOTP()">Send OTP</button>
+    <h2>SYSTEM ACCESS</h2>
+    <p style="color: #666; font-size: 13px;">Enter credentials to begin Awakening.</p>
+    <input type="email" id="email" placeholder="Hunter Email">
+    <button type="button" onclick="sendOTP()">SEND ACCESS CODE</button>
+    <div style="margin: 20px 0; height: 1px; background: #333;"></div>
     <input type="text" id="otp" placeholder="Enter 6-Digit OTP">
-    <button type="button" onclick="verifyOTP()">Verify & Login</button>
+    <button type="button" onclick="verifyOTP()">INITIALIZE SYSTEM</button>
 </div>
 
 <div class="container hidden" id="dashboard-section">
-    <h2 id="hunter-name">Hunter Profile</h2>
+    <span class="rank-tag">E-RANK HUNTER</span>
+    <h2 id="hunter-id">ID: LOADING...</h2>
+    
     <div class="stat-card">Pushups: <span id="p-count">0</span></div>
     <div class="stat-card">Situps: <span id="si-count">0</span></div>
-    <button onclick="updateStat('pushups')">+10 Pushups</button>
-    <button style="background: #ff4444;" onclick="logout()">Disconnect</button>
+    
+    <button onclick="updateStat('pushups')">+10 PUSHUPS</button>
+    <button onclick="updateStat('situps')">+10 SITUPS</button>
+    
+    <button style="background: #ff4d4d; color: white; margin-top: 30px;" onclick="logout()">SHUTDOWN SYSTEM</button>
 </div>
 
 <script>
-    // --- KEYS APPLIED BY SYSTEM ---
-    const SB_URL = "https://wtuaqbgdekhuwieznaxw.supabase.co"; 
-    const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0dXFxYmdkZWtodXdpZXpuYXh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxODI5MzgsImV4cCI6MjA5MTc1ODkzOH0.reg4QhMeaEerMVsIFNebgQ7pn2U3RtvDSS59NGrVRrY";
+    // --- DATABASE CONFIGURATION (UPDATED WITH YOUR KEYS) ---
+    const SB_URL = "https://wtuqqbgdekhuwieznaxw.supabase.co";
+    const SB_KEY = "EyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0dXFxYmdkZWtodXdpZXpuYXh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxODI5MzgsImV4cCI6MjA5MTc1ODkzOH0.reg4QhMeaEerMVsIFNebgQ7pn2U3RtvDSS59NGrVRrY"; 
 
-    const { createClient } = supabase;
-    const _supabase = createClient(SB_URL, SB_KEY);
+    const _supabase = supabase.createClient(SB_URL, SB_KEY);
+
+    // --- FUNCTIONS ---
 
     async function sendOTP() {
         const email = document.getElementById('email').value;
-        if(!email) return alert("Email dalo!");
+        if(!email) return alert("System Error: Email required.");
 
-        const { error } = await _supabase.auth.signInWithOtp({ 
+        const { error } = await _supabase.auth.signInWithOtp({
             email: email,
             options: { shouldCreateUser: true }
         });
 
-        if (error) alert("Error: " + error.message);
-        else alert("OTP Sent! Check your email inbox.");
+        if (error) alert("Access Denied: " + error.message);
+        else alert("System: 6-Digit code dispatched to your email!");
     }
 
     async function verifyOTP() {
         const email = document.getElementById('email').value;
         const token = document.getElementById('otp').value;
-        
-        const { error } = await _supabase.auth.verifyOtp({
+        if(!token) return alert("System Error: OTP required.");
+
+        const { data, error } = await _supabase.auth.verifyOtp({
             email, token, type: 'email'
         });
 
         if (error) {
-            const { error: e2 } = await _supabase.auth.verifyOtp({ email, token, type: 'signup' });
-            if (e2) alert("Invalid OTP!");
-            else location.reload();
+            const { error: err2 } = await _supabase.auth.verifyOtp({ email, token, type: 'signup' });
+            if (err2) alert("Authentication Failed: Invalid Code.");
+            else checkSession();
         } else {
-            location.reload();
+            checkSession();
         }
     }
 
@@ -78,31 +89,12 @@
         if (session) {
             document.getElementById('auth-section').classList.add('hidden');
             document.getElementById('dashboard-section').classList.remove('hidden');
-            loadData(session.user.id);
+            loadHunterData(session.user.id);
         }
     }
 
-    async function loadData(uid) {
-        let { data } = await _supabase.from('hunters').select('*').eq('user_id', uid).single();
-        if(data) {
-            document.getElementById('p-count').innerText = data.pushups || 0;
-            document.getElementById('si-count').innerText = data.situps || 0;
-        }
-    }
-
-    async function updateStat(type) {
-        const { data: { session } } = await _supabase.auth.getSession();
-        const curVal = parseInt(document.getElementById('p-count').innerText);
-        await _supabase.from('hunters').update({ [type]: curVal + 10 }).eq('user_id', session.user.id);
-        loadData(session.user.id);
-    }
-
-    async function logout() {
-        await _supabase.auth.signOut();
-        location.reload();
-    }
-
-    window.onload = checkSession;
-</script>
-</body>
-</html>
+    async function loadHunterData(uid) {
+        let { data, error } = await _supabase.from('hunters').select('*').eq('user_id', uid).single();
+        
+        if (!data) {
+            
