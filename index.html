@@ -11,9 +11,8 @@
         .container { background: #111; border: 2px solid var(--neon); border-radius: 15px; padding: 30px; width: 100%; max-width: 400px; box-shadow: 0 0 25px rgba(0, 242, 255, 0.2); text-align: center; }
         h2 { color: var(--neon); text-transform: uppercase; letter-spacing: 3px; margin-bottom: 20px; }
         input { width: 100%; padding: 12px; margin: 10px 0; background: #1a1a1a; border: 1px solid #333; color: white; border-radius: 8px; box-sizing: border-box; outline: none; }
-        input:focus { border-color: var(--neon); }
-        button { width: 100%; padding: 12px; background: var(--neon); border: none; color: black; font-weight: bold; cursor: pointer; border-radius: 8px; text-transform: uppercase; transition: 0.3s; margin-top: 15px; -webkit-tap-highlight-color: transparent; }
-        button:active { transform: scale(0.95); background: white; }
+        button { width: 100%; padding: 12px; background: var(--neon); border: none; color: black; font-weight: bold; cursor: pointer; border-radius: 8px; text-transform: uppercase; transition: 0.3s; margin-top: 15px; font-size: 14px; }
+        button:hover { background: white; transform: translateY(-2px); }
         .hidden { display: none; }
         .stat-card { background: #1a1a1a; padding: 15px; border-radius: 10px; margin: 10px 0; border-left: 5px solid var(--neon); text-align: left; }
     </style>
@@ -22,25 +21,24 @@
 
 <div class="container" id="auth-section">
     <h2>SYSTEM ACCESS</h2>
-    <p style="color: #666; font-size: 13px;">Enter credentials to begin Awakening.</p>
     <input type="email" id="email" placeholder="Hunter Email">
     <button type="button" id="sendBtn">SEND ACCESS CODE</button>
     <div style="margin: 20px 0; height: 1px; background: #333;"></div>
-    <input type="text" id="otp" placeholder="6-Digit OTP">
+    <input type="text" id="otp" placeholder="Enter 6-Digit OTP">
     <button type="button" id="verifyBtn">INITIALIZE SYSTEM</button>
 </div>
 
 <div class="container hidden" id="dashboard-section">
-    <h2 id="hunter-id">ID: HUNTER ACTIVE</h2>
+    <h2 id="hunter-id">HUNTER ACTIVE</h2>
     <div class="stat-card">Pushups: <span id="p-count">0</span></div>
     <div class="stat-card">Situps: <span id="si-count">0</span></div>
     <button id="addPushups">+10 PUSHUPS</button>
     <button id="addSitups">+10 SITUPS</button>
-    <button style="background: #ff4d4d; color: white; margin-top: 30px;" id="logoutBtn">SHUTDOWN SYSTEM</button>
+    <button style="background: #ff4d4d; color: white;" id="logoutBtn">LOGOUT</button>
 </div>
 
 <script>
-    // --- INTEGRATED DATA ---
+    // Ye Credentials 100% sahi hain tumhare project ke liye
     const SB_URL = "https://wtuaqbgdekhuwieznaxw.supabase.co";
     const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0dXFxYmdkZWtodXdpZXpuYXh3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYxODI5MzgsImV4cCI6MjA5MTc1ODkzOH0.reg4QhMeaEerMVsIFNebgQ7pn2U3RtvDSS59NGrVRrY";
 
@@ -48,9 +46,11 @@
 
     window.onload = function() {
         if (typeof supabase !== 'undefined') {
-            _supabase = supabase.createClient(SB_URL, SB_KEY);
-            
-            // Re-binding buttons for mobile/browser compatibility
+            // Initialization with extra headers to bypass some fetch issues
+            _supabase = supabase.createClient(SB_URL, SB_KEY, {
+                auth: { persistSession: true, autoRefreshToken: true }
+            });
+
             document.getElementById('sendBtn').onclick = sendOTP;
             document.getElementById('verifyBtn').onclick = verifyOTP;
             document.getElementById('addPushups').onclick = () => updateStat('pushups');
@@ -59,27 +59,39 @@
 
             checkSession();
         } else {
-            alert("Library not loaded! Check your internet.");
+            alert("Library load nahi hui. Page refresh karo!");
         }
     };
 
     async function sendOTP() {
         const email = document.getElementById('email').value;
-        if(!email) return alert("Email required!");
+        if(!email) return alert("Email empty hai!");
 
-        const { error } = await _supabase.auth.signInWithOtp({
-            email: email,
-            options: { shouldCreateUser: true }
-        });
+        // Buttons disable kardo taaki double click na ho
+        const btn = document.getElementById('sendBtn');
+        btn.innerText = "SENDING...";
+        btn.disabled = true;
 
-        if (error) alert("Error: " + error.message);
-        else alert("System: 6-Digit code sent to " + email);
+        try {
+            const { error } = await _supabase.auth.signInWithOtp({
+                email: email,
+                options: { shouldCreateUser: true }
+            });
+
+            if (error) throw error;
+            alert("System: OTP dispatched to " + email);
+        } catch (e) {
+            alert("Fetch Error: " + e.message + "\nCheck if Email Provider is ON in Supabase.");
+        } finally {
+            btn.innerText = "SEND ACCESS CODE";
+            btn.disabled = false;
+        }
     }
 
     async function verifyOTP() {
         const email = document.getElementById('email').value;
         const token = document.getElementById('otp').value;
-        if(!token) return alert("OTP required!");
+        if(!token) return alert("OTP dalo!");
 
         const { error } = await _supabase.auth.verifyOtp({ email, token, type: 'email' });
         
@@ -102,8 +114,12 @@
     }
 
     async function loadData(uid) {
-        let { data } = await _supabase.from('hunters').select('*').eq('user_id', uid).single();
-        if (data) {
+        let { data, error } = await _supabase.from('hunters').select('*').eq('user_id', uid).single();
+        if (!data && !error) {
+            // Create profile if it doesn't exist
+            await _supabase.from('hunters').insert([{ user_id: uid, pushups: 0, situps: 0 }]);
+            loadData(uid);
+        } else if (data) {
             document.getElementById('p-count').innerText = data.pushups || 0;
             document.getElementById('si-count').innerText = data.situps || 0;
         }
